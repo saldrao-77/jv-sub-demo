@@ -42,34 +42,39 @@ export async function createNewJob(formData: FormData) {
   const vendorsString = formData.get("vendors") as string
   const vendors = vendorsString ? vendorsString.split(",").map((v) => v.trim()) : []
 
-  const job = await createJob({
-    name: jobName,
-    address: propertyAddress,
-    deposit_amount: depositAmount,
-    status: "Deposit request sent",
-    start_date: startDate || new Date().toISOString().split("T")[0],
-    customer: {
-      name: customerName,
-      email: customerEmail,
-      phone: customerPhone,
+  try {
+    const job = await createJob({
+      name: jobName,
       address: propertyAddress,
-    },
-    vendors,
-  })
+      deposit_amount: depositAmount,
+      status: "Deposit request sent",
+      start_date: startDate || new Date().toISOString().split("T")[0],
+      customer: {
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        address: propertyAddress,
+      },
+      vendors,
+    })
 
-  if (!job) {
-    return { success: false, message: "Failed to create job" }
+    if (!job) {
+      return { success: false, message: "Failed to create job" }
+    }
+
+    // Create initial transaction for deposit request
+    await createTransaction({
+      job_id: job.id,
+      type: "Request",
+      amount: depositAmount,
+      status: "Deposit request sent",
+    })
+
+    return { success: true, jobId: job.id }
+  } catch (error) {
+    console.error("Error in createNewJob:", error)
+    return { success: false, message: error instanceof Error ? error.message : "Unknown error occurred" }
   }
-
-  // Create initial transaction for deposit request
-  await createTransaction({
-    job_id: job.id,
-    type: "Request",
-    amount: depositAmount,
-    status: "Deposit request sent",
-  })
-
-  return { success: true, jobId: job.id }
 }
 
 export async function markDepositPaid(jobId: string) {

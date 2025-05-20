@@ -11,7 +11,6 @@ export interface Database {
           expiry_date: string | null
           status: string | null
           created_at: string | null
-          updated_at: string | null
           expires_at: string | null
           issued_at: string | null
           available_amount: number | null
@@ -23,7 +22,6 @@ export interface Database {
           expiry_date?: string | null
           status?: string | null
           created_at?: string | null
-          updated_at?: string | null
           expires_at?: string | null
           issued_at?: string | null
           available_amount?: number | null
@@ -35,7 +33,6 @@ export interface Database {
           expiry_date?: string | null
           status?: string | null
           created_at?: string | null
-          updated_at?: string | null
           expires_at?: string | null
           issued_at?: string | null
           available_amount?: number | null
@@ -44,33 +41,27 @@ export interface Database {
       customers: {
         Row: {
           id: string
-          user_id: string | null
           name: string | null
           email: string | null
           phone: string | null
           address: string | null
           created_at: string | null
-          updated_at: string | null
         }
         Insert: {
           id?: string
-          user_id?: string | null
           name?: string | null
           email?: string | null
           phone?: string | null
           address?: string | null
           created_at?: string | null
-          updated_at?: string | null
         }
         Update: {
           id?: string
-          user_id?: string | null
           name?: string | null
           email?: string | null
           phone?: string | null
           address?: string | null
           created_at?: string | null
-          updated_at?: string | null
         }
       }
       job_vendors: {
@@ -96,7 +87,6 @@ export interface Database {
       jobs: {
         Row: {
           id: string
-          user_id: string | null
           customer_id: string | null
           name: string | null
           address: string | null
@@ -108,7 +98,6 @@ export interface Database {
         }
         Insert: {
           id?: string
-          user_id?: string | null
           customer_id?: string | null
           name?: string | null
           address?: string | null
@@ -120,7 +109,6 @@ export interface Database {
         }
         Update: {
           id?: string
-          user_id?: string | null
           customer_id?: string | null
           name?: string | null
           address?: string | null

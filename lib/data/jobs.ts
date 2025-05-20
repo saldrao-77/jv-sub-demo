@@ -1,9 +1,26 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
-import type { Database } from "@/lib/database.types"
 
-export type Job = Database["public"]["Tables"]["jobs"]["Row"] & {
-  customer?: Database["public"]["Tables"]["customers"]["Row"]
-  vendors?: Database["public"]["Tables"]["vendors"]["Row"][]
+export type Job = {
+  id: string
+  name: string | null
+  address: string | null
+  deposit_amount: number | null
+  spent_amount: number | null
+  status: string | null
+  start_date: string | null
+  created_at: string | null
+  customer_id: string | null
+  customer?: {
+    id: string
+    name: string | null
+    email: string | null
+    phone: string | null
+    address: string | null
+  } | null
+  vendors?: {
+    id: string
+    name: string
+  }[]
 }
 
 export async function getJobs() {
