@@ -1,50 +1,48 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import Image from "next/image"
 import { CheckCircle2, CreditCard, Receipt, ShieldCheck } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { getPaymentLink } from "@/lib/actions"
+import { formatCurrency, formatDate } from "@/lib/utils"
 
 export default function ConfirmationPage({ params }: { params: { id: string } }) {
-  const [jobDetails, setJobDetails] = useState({
-    job: "Bathroom Renovation",
-    customer: "",
-    email: "",
-    phone: "",
-    vendor: "Home Depot",
-    amount: 850.0,
-    date: "May 19, 2025",
+  const [paymentDetails, setPaymentDetails] = useState({
+    job: {
+      name: "",
+      deposit_amount: 0,
+      customer: {
+        name: "",
+        email: "",
+        phone: "",
+      },
+    },
+    date: new Date().toISOString(),
     status: "Funds Received",
-    description: "",
+    vendors: ["Home Depot", "Lowe's"],
   })
 
-  // In a real app, you would fetch job details based on the ID
+  // Fetch payment details
   useEffect(() => {
-    // This would be an API call in a real application
-    console.log(`Fetching confirmation details for job ID: ${params.id}`)
+    async function fetchPaymentDetails() {
+      try {
+        const paymentLink = await getPaymentLink(params.id)
+        if (paymentLink) {
+          setPaymentDetails({
+            job: paymentLink.job,
+            date: paymentLink.updated_at,
+            status: "Funds Received",
+            vendors: ["Home Depot", "Lowe's"], // This would come from job vendors in a real app
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching payment details:", error)
+      }
+    }
 
-    // For demo purposes, we're just using the hardcoded data
-    // In a real app, you would do something like:
-    // async function fetchJobDetails() {
-    //   const response = await fetch(`/api/jobs/${params.id}/confirmation`);
-    //   const data = await response.json();
-    //   setJobDetails(data);
-    // }
-    // fetchJobDetails();
-
-    // Simulate fetching more detailed job information
-    setJobDetails({
-      job: "Bathroom Renovation",
-      customer: "Sarah Johnson",
-      email: "sarah.johnson@example.com",
-      phone: "(555) 123-4567",
-      vendor: "Home Depot, Lowe's",
-      amount: 850.0,
-      date: "May 19, 2025",
-      status: "Funds Received",
-      description: "Materials for bathroom renovation including tiles, fixtures, and plumbing supplies.",
-    })
+    fetchPaymentDetails()
   }, [params.id])
 
   return (
@@ -78,7 +76,7 @@ export default function ConfirmationPage({ params }: { params: { id: string } })
                       <CheckCircle2 className="h-6 w-6 text-green-400" />
                     </div>
                     <div>
-                      <div className="text-lg font-medium">{jobDetails.status}</div>
+                      <div className="text-lg font-medium">{paymentDetails.status}</div>
                       <div className="text-sm text-muted-foreground">
                         Your payment has been received and is being processed
                       </div>
@@ -89,7 +87,7 @@ export default function ConfirmationPage({ params }: { params: { id: string } })
                     <div className="flex items-start">
                       <ShieldCheck className="h-6 w-6 text-blue mr-3 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-lg">Materials funds received for {jobDetails.job}</p>
+                        <p className="font-medium text-lg">Materials funds received for {paymentDetails.job.name}</p>
                         <p className="mt-1 text-muted-foreground">
                           Funds can only be used at the specified vendors and will expire in 30 days if unused.
                         </p>
@@ -114,7 +112,7 @@ export default function ConfirmationPage({ params }: { params: { id: string } })
                       </div>
                       <div>
                         <div className="text-lg font-medium">Payment Received</div>
-                        <div className="text-muted-foreground">{jobDetails.date} • 10:24 AM</div>
+                        <div className="text-muted-foreground">{formatDate(paymentDetails.date)}</div>
                       </div>
                     </div>
 
@@ -156,19 +154,19 @@ export default function ConfirmationPage({ params }: { params: { id: string } })
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Job</div>
-                    <div className="font-medium text-lg">{jobDetails.job}</div>
+                    <div className="font-medium text-lg">{paymentDetails.job.name}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Amount</div>
-                    <div className="font-medium text-lg">${jobDetails.amount.toFixed(2)}</div>
+                    <div className="font-medium text-lg">{formatCurrency(paymentDetails.job.deposit_amount)}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Vendors</div>
-                    <div className="font-medium">{jobDetails.vendor}</div>
+                    <div className="font-medium">{paymentDetails.vendors.join(", ")}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Date</div>
-                    <div className="font-medium">{jobDetails.date}</div>
+                    <div className="font-medium">{formatDate(paymentDetails.date)}</div>
                   </div>
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Reference</div>
@@ -184,16 +182,20 @@ export default function ConfirmationPage({ params }: { params: { id: string } })
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-muted-foreground">Name</div>
-                    <div className="font-medium">{jobDetails.customer}</div>
+                    <div className="font-medium">{paymentDetails.job.customer.name}</div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Email</div>
-                    <div className="font-medium break-words">{jobDetails.email}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-muted-foreground">Phone</div>
-                    <div className="font-medium">{jobDetails.phone}</div>
-                  </div>
+                  {paymentDetails.job.customer.email && (
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-muted-foreground">Email</div>
+                      <div className="font-medium break-words">{paymentDetails.job.customer.email}</div>
+                    </div>
+                  )}
+                  {paymentDetails.job.customer.phone && (
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-muted-foreground">Phone</div>
+                      <div className="font-medium">{paymentDetails.job.customer.phone}</div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

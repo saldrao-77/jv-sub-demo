@@ -1,271 +1,13 @@
-"use client"
-
-import { useState } from "react"
-import { ArrowUpDown, CheckCircle2, ChevronDown, ChevronUp, CreditCard, Plus, Receipt, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Suspense } from "react"
+import { getJobs, getTransactions } from "@/lib/actions"
 import { Header } from "@/components/header"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrency } from "@/lib/utils"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Plus } from "lucide-react"
 
-// Sample data for ongoing jobs
-const ongoingJobs = [
-  {
-    id: "1",
-    customer: "Sarah Johnson",
-    job: "Bathroom Renovation",
-    address: "123 Oak St, San Francisco, CA",
-    depositAmount: 850,
-    spent: 0,
-    vendors: ["Home Depot"],
-    status: "Deposit paid",
-    startDate: "May 15, 2025",
-    transactions: [
-      {
-        date: "May 18, 2025",
-        type: "Deposit",
-        amount: 850,
-        vendor: "-",
-        status: "Deposit paid",
-      },
-    ],
-  },
-  {
-    id: "2",
-    customer: "Michael Chen",
-    job: "Kitchen Remodel",
-    address: "456 Pine Ave, Oakland, CA",
-    depositAmount: 1200,
-    spent: 750,
-    vendors: ["Lowe's", "Home Depot"],
-    status: "Materials purchased",
-    startDate: "May 10, 2025",
-    transactions: [
-      {
-        date: "May 12, 2025",
-        type: "Deposit",
-        amount: 1200,
-        vendor: "-",
-        status: "Deposit paid",
-      },
-      {
-        date: "May 13, 2025",
-        type: "Card Issued",
-        amount: 1200,
-        vendor: "Lowe's, Home Depot",
-        status: "Card issued",
-      },
-      {
-        date: "May 15, 2025",
-        type: "Purchase",
-        amount: -750,
-        vendor: "Lowe's",
-        status: "Materials purchased",
-      },
-    ],
-  },
-  {
-    id: "3",
-    customer: "Robert Garcia",
-    job: "Deck Construction",
-    address: "789 Maple Dr, San Jose, CA",
-    depositAmount: 750,
-    spent: 0,
-    vendors: ["Home Depot", "Ace Hardware"],
-    status: "Card issued",
-    startDate: "May 16, 2025",
-    transactions: [
-      {
-        date: "May 17, 2025",
-        type: "Deposit",
-        amount: 750,
-        vendor: "-",
-        status: "Deposit paid",
-      },
-      {
-        date: "May 19, 2025",
-        type: "Card Issued",
-        amount: 750,
-        vendor: "Home Depot, Ace Hardware",
-        status: "Card issued",
-      },
-    ],
-  },
-  {
-    id: "4",
-    customer: "Jennifer Lee",
-    job: "Basement Finishing",
-    address: "321 Cedar Ln, Berkeley, CA",
-    depositAmount: 1500,
-    spent: 0,
-    vendors: ["Home Depot", "Menards"],
-    status: "Deposit request sent",
-    startDate: "May 19, 2025",
-    transactions: [
-      {
-        date: "May 19, 2025",
-        type: "Request",
-        amount: 1500,
-        vendor: "-",
-        status: "Deposit request sent",
-      },
-    ],
-  },
-]
-
-// Sample data for transaction feed
-const transactionFeed = [
-  {
-    date: "May 19, 2025",
-    customer: "Jennifer Lee",
-    job: "Basement Finishing",
-    type: "Request",
-    vendor: "-",
-    amount: 1500,
-    status: "Deposit request sent",
-  },
-  {
-    date: "May 19, 2025",
-    customer: "Robert Garcia",
-    job: "Deck Construction",
-    type: "Card Issued",
-    vendor: "Home Depot, Ace Hardware",
-    amount: 750,
-    status: "Card issued",
-  },
-  {
-    date: "May 18, 2025",
-    customer: "Sarah Johnson",
-    job: "Bathroom Renovation",
-    type: "Deposit",
-    vendor: "-",
-    amount: 850,
-    status: "Deposit paid",
-  },
-  {
-    date: "May 15, 2025",
-    customer: "Michael Chen",
-    job: "Kitchen Remodel",
-    type: "Purchase",
-    vendor: "Lowe's",
-    amount: -750,
-    status: "Materials purchased",
-  },
-  {
-    date: "May 13, 2025",
-    customer: "Michael Chen",
-    job: "Kitchen Remodel",
-    type: "Card Issued",
-    vendor: "Lowe's, Home Depot",
-    amount: 1200,
-    status: "Card issued",
-  },
-  {
-    date: "May 12, 2025",
-    customer: "Michael Chen",
-    job: "Kitchen Remodel",
-    type: "Deposit",
-    vendor: "-",
-    amount: 1200,
-    status: "Deposit paid",
-  },
-]
-
-export default function Dashboard() {
-  const [expandedJobs, setExpandedJobs] = useState<string[]>([])
-
-  const toggleJobExpansion = (jobId: string) => {
-    if (expandedJobs.includes(jobId)) {
-      setExpandedJobs(expandedJobs.filter((id) => id !== jobId))
-    } else {
-      setExpandedJobs([...expandedJobs, jobId])
-    }
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Deposit request sent":
-        return (
-          <span className="inline-flex items-center rounded-full bg-amber-900/20 px-2 py-1 text-xs font-medium text-amber-400">
-            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-            {status}
-          </span>
-        )
-      case "Deposit paid":
-        return (
-          <span className="inline-flex items-center rounded-full bg-green-900/20 px-2 py-1 text-xs font-medium text-green-400">
-            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-green-400"></span>
-            {status}
-          </span>
-        )
-      case "Card issued":
-        return (
-          <span className="inline-flex items-center rounded-full bg-blue/10 px-2 py-1 text-xs font-medium text-blue">
-            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-blue"></span>
-            {status}
-          </span>
-        )
-      case "Materials purchased":
-        return (
-          <span className="inline-flex items-center rounded-full bg-purple-900/20 px-2 py-1 text-xs font-medium text-purple-400">
-            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-purple-400"></span>
-            {status}
-          </span>
-        )
-      default:
-        return (
-          <span className="inline-flex items-center rounded-full bg-gray-900/20 px-2 py-1 text-xs font-medium text-gray-400">
-            <span className="mr-1 h-1.5 w-1.5 rounded-full bg-gray-400"></span>
-            {status}
-          </span>
-        )
-    }
-  }
-
-  const getTransactionTypeBadge = (type: string) => {
-    switch (type) {
-      case "Deposit":
-        return (
-          <span className="inline-flex items-center rounded-full bg-green-900/20 px-2 py-1 text-xs font-medium text-green-400">
-            <CheckCircle2 className="mr-1 h-3 w-3" />
-            {type}
-          </span>
-        )
-      case "Card Issued":
-        return (
-          <span className="inline-flex items-center rounded-full bg-blue/10 px-2 py-1 text-xs font-medium text-blue">
-            <CreditCard className="mr-1 h-3 w-3" />
-            {type}
-          </span>
-        )
-      case "Purchase":
-        return (
-          <span className="inline-flex items-center rounded-full bg-purple-900/20 px-2 py-1 text-xs font-medium text-purple-400">
-            <Receipt className="mr-1 h-3 w-3" />
-            {type}
-          </span>
-        )
-      case "Request":
-        return (
-          <span className="inline-flex items-center rounded-full bg-amber-900/20 px-2 py-1 text-xs font-medium text-amber-400">
-            <Receipt className="mr-1 h-3 w-3" />
-            {type}
-          </span>
-        )
-      default:
-        return (
-          <span className="inline-flex items-center rounded-full bg-gray-900/20 px-2 py-1 text-xs font-medium text-gray-400">
-            <Receipt className="mr-1 h-3 w-3" />
-            {type}
-          </span>
-        )
-    }
-  }
-
+export default async function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -276,251 +18,175 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Manage your materials deposits and track your jobs</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <Link href="/jobs/new" className="flex flex-col items-center">
-              <Plus className="h-5 w-5 text-white" />
-              <span className="text-white">New Job</span>
+            <Link href="/jobs/new" className="flex items-center">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Job
+              </Button>
             </Link>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Total Deposits</CardTitle>
-                <CardDescription>Materials deposits received</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">$2,800.00</div>
-                <p className="text-xs text-muted-foreground mt-1">From 3 jobs</p>
-              </CardContent>
-            </Card>
+        <Suspense fallback={<div>Loading...</div>}>
+          <DashboardStats />
+        </Suspense>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Materials Purchased</CardTitle>
-                <CardDescription>Total spent on materials</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">$750.00</div>
-                <p className="text-xs text-muted-foreground mt-1">From 1 job</p>
-              </CardContent>
-            </Card>
+        <div className="mt-6">
+          <Suspense fallback={<div>Loading...</div>}>
+            <RecentJobs />
+          </Suspense>
+        </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Funds</CardTitle>
-                <CardDescription>Ready to use for materials</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue">$2,050.00</div>
-                <p className="text-xs text-muted-foreground mt-1">Across 3 active cards</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Ongoing Jobs Table (Now in the middle) */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ongoing Jobs</CardTitle>
-              <CardDescription>View and manage your active material deposit requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border border-border">
-                <div className="grid grid-cols-9 p-4 text-sm font-medium bg-secondary/30">
-                  <div className="md:col-span-1 px-2">Customer</div>
-                  <div className="md:col-span-1 px-2">Job</div>
-                  <div className="md:col-span-2 px-2">Property Address</div>
-                  <div className="md:col-span-1 px-2">Job Started</div>
-                  <div className="md:col-span-1 px-2">Deposit Amount</div>
-                  <div className="md:col-span-1 px-2">Spent</div>
-                  <div className="md:col-span-1 px-2">Vendors</div>
-                  <div className="md:col-span-1 px-2">Status</div>
-                </div>
-                <div className="divide-y divide-border">
-                  {ongoingJobs.map((job) => (
-                    <Collapsible key={job.id} open={expandedJobs.includes(job.id)}>
-                      <CollapsibleTrigger asChild className="w-full">
-                        <div
-                          className="grid grid-cols-1 md:grid-cols-9 p-4 text-sm items-center cursor-pointer hover:bg-secondary/50"
-                          onClick={() => toggleJobExpansion(job.id)}
-                        >
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Customer:</div>
-                            {job.customer}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Job:</div>
-                            {job.job}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-2">
-                            <div className="font-medium md:hidden">Property Address:</div>
-                            {job.address}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Job Started:</div>
-                            {job.startDate}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Deposit Amount:</div>${job.depositAmount.toFixed(2)}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Spent:</div>${job.spent.toFixed(2)}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1">
-                            <div className="font-medium md:hidden">Vendors:</div>
-                            <div className="flex flex-wrap gap-1">
-                              {job.vendors.map((vendor) => (
-                                <Badge key={vendor} variant="outline" className="text-xs">
-                                  {vendor}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-1 flex items-center justify-between">
-                            <div className="font-medium md:hidden">Status:</div>
-                            {getStatusBadge(job.status)}
-                            <div className="ml-2">
-                              {expandedJobs.includes(job.id) ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="bg-secondary/30 p-4 pl-8">
-                          <div className="text-sm font-medium mb-2">Transaction History</div>
-                          <div className="space-y-2">
-                            {job.transactions.map((transaction, idx) => (
-                              <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs">
-                                <div className="py-1 px-2">
-                                  <div className="font-medium md:hidden">Date:</div>
-                                  {transaction.date}
-                                </div>
-                                <div className="py-1 px-2">
-                                  <div className="font-medium md:hidden">Type:</div>
-                                  {getTransactionTypeBadge(transaction.type)}
-                                </div>
-                                <div className="py-1 px-2">
-                                  <div className="font-medium md:hidden">Vendor:</div>
-                                  {transaction.vendor}
-                                </div>
-                                <div
-                                  className={`py-1 px-2 ${transaction.amount < 0 ? "text-red-400" : "text-green-400"}`}
-                                >
-                                  <div className="font-medium md:hidden">Amount:</div>
-                                  {transaction.amount < 0 ? "-" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                                </div>
-                                <div className="py-1 px-2">
-                                  <div className="font-medium md:hidden">Status:</div>
-                                  {transaction.status}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" size="sm" className="ml-auto" asChild>
-                <Link href="/jobs">View All Jobs</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Transaction Feed (Renamed from Transaction History) */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex flex-col md:flex-row justify-between md:items-center space-y-2 md:space-y-0">
-                <CardTitle>Transaction Feed</CardTitle>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="search" placeholder="Search transactions..." className="pl-8 w-full sm:w-[200px]" />
-                  </div>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="w-full sm:w-[150px]">
-                      <SelectValue placeholder="Filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Transactions</SelectItem>
-                      <SelectItem value="deposits">Deposits</SelectItem>
-                      <SelectItem value="purchases">Purchases</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="all">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="deposits">Deposits</TabsTrigger>
-                  <TabsTrigger value="purchases">Purchases</TabsTrigger>
-                </TabsList>
-                <div className="space-y-4">
-                  <div className="rounded-md border border-border">
-                    <div className="grid grid-cols-6 p-4 text-sm font-medium bg-secondary/30">
-                      <div className="col-span-6 md:col-span-1 px-2 flex items-center">
-                        Date
-                        <ArrowUpDown className="ml-1 h-3 w-3" />
-                      </div>
-                      <div className="col-span-6 md:col-span-2 px-2">Job</div>
-                      <div className="col-span-6 md:col-span-1 px-2">Type</div>
-                      <div className="col-span-6 md:col-span-1 px-2">Vendor</div>
-                      <div className="col-span-6 md:col-span-1 px-2 text-right">Amount</div>
-                    </div>
-                    <div className="divide-y divide-border">
-                      {transactionFeed.map((transaction, idx) => (
-                        <div key={idx} className="grid grid-cols-1 md:grid-cols-6 p-4 text-sm items-center">
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Date:</div>
-                            {transaction.date}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-2">
-                            <div className="font-medium md:hidden">Job:</div>
-                            <Link href={`/jobs/${idx + 1}`} className="font-medium hover:text-blue">
-                              {transaction.job}
-                            </Link>
-                            <div className="text-xs text-muted-foreground">{transaction.customer}</div>
-                          </div>
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Type:</div>
-                            {getTransactionTypeBadge(transaction.type)}
-                          </div>
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Vendor:</div>
-                            {transaction.vendor}
-                          </div>
-                          <div
-                            className={`py-2 md:py-0 px-2 md:text-right ${transaction.amount < 0 ? "text-red-400" : ""}`}
-                          >
-                            <div className="font-medium md:hidden">Amount:</div>
-                            {transaction.amount < 0 ? "-" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Tabs>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" size="sm" className="ml-auto" asChild>
-                <Link href="/transactions">View All Transactions</Link>
-              </Button>
-            </CardFooter>
-          </Card>
+        <div className="mt-6">
+          <Suspense fallback={<div>Loading...</div>}>
+            <RecentTransactions />
+          </Suspense>
         </div>
       </main>
     </div>
+  )
+}
+
+async function DashboardStats() {
+  const jobs = await getJobs()
+
+  const totalDeposits = jobs.reduce((sum, job) => sum + job.deposit_amount, 0)
+  const totalSpent = jobs.reduce((sum, job) => sum + job.spent_amount, 0)
+  const availableFunds = totalDeposits - totalSpent
+
+  const activeJobs = jobs.filter((job) => job.status === "active")
+
+  return (
+    <div className="grid gap-6 md:grid-cols-3">
+      <Card>
+        <CardHeader>
+          <CardTitle>Total Deposits</CardTitle>
+          <CardDescription>Materials deposits received</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold">{formatCurrency(totalDeposits)}</div>
+          <p className="text-xs text-muted-foreground mt-1">From {jobs.length} jobs</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Materials Purchased</CardTitle>
+          <CardDescription>Total spent on materials</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold">{formatCurrency(totalSpent)}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {totalDeposits > 0 ? `${((totalSpent / totalDeposits) * 100).toFixed(1)}% of deposits` : "0% of deposits"}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Available Funds</CardTitle>
+          <CardDescription>Ready to use for materials</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-blue">{formatCurrency(availableFunds)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Across {activeJobs.length} active jobs</p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+async function RecentJobs() {
+  const jobs = await getJobs()
+  const recentJobs = jobs.slice(0, 5)
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Recent Jobs</CardTitle>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/jobs">
+            View All
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {recentJobs.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground">No jobs found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {recentJobs.map((job) => (
+              <div key={job.id} className="flex items-center justify-between">
+                <div>
+                  <Link href={`/jobs/${job.id}`} className="font-medium hover:underline">
+                    {job.name}
+                  </Link>
+                  <p className="text-sm text-muted-foreground">{job.customer?.name}</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-medium">{formatCurrency(job.deposit_amount)}</div>
+                  <p className="text-sm text-muted-foreground">{job.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+async function RecentTransactions() {
+  const transactions = await getTransactions()
+  const recentTransactions = transactions.slice(0, 5)
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Recent Transactions</CardTitle>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/transactions">
+            View All
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {recentTransactions.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground">No transactions found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {recentTransactions.map((transaction) => (
+              <div key={transaction.id} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{transaction.type}</p>
+                  <p className="text-sm text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <div
+                    className={`font-medium ${
+                      transaction.type === "deposit"
+                        ? "text-green-600"
+                        : transaction.type === "expense"
+                          ? "text-red-600"
+                          : "text-blue-600"
+                    }`}
+                  >
+                    {transaction.type === "deposit" ? "+" : transaction.type === "expense" ? "-" : "+"}
+                    {formatCurrency(transaction.amount)}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{transaction.vendor?.name || "N/A"}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
