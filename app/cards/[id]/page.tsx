@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, CreditCard, Receipt, ShieldCheck } from "lucide-react"
+import { ArrowLeft, CreditCard, Eye, EyeOff, LinkIcon, Phone, Receipt, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 // Update the cardsData array to separate name and role
 const cardsData = [
@@ -18,7 +19,7 @@ const cardsData = [
     jobName: "Bathroom Renovation",
     customer: "Sarah Johnson",
     vendor: "Home Depot",
-    cardNumber: "•••• •••• •••• 4589",
+    cardNumber: "4242 4242 4242 4589",
     expiryDate: "06/25",
     cvv: "123",
     billingZip: "94105",
@@ -36,7 +37,7 @@ const cardsData = [
     jobName: "Kitchen Remodel",
     customer: "Michael Chen",
     vendor: "Lowe's, Home Depot",
-    cardNumber: "•••• •••• •••• 7823",
+    cardNumber: "4242 4242 4242 7823",
     expiryDate: "06/25",
     cvv: "456",
     billingZip: "60611",
@@ -48,10 +49,12 @@ const cardsData = [
     role: "Foreman",
     transactions: [
       {
+        id: "t1",
         date: "May 15, 2025",
         vendor: "Lowe's",
         amount: 750,
         description: "Kitchen cabinets and countertops",
+        receiptSubmitted: true,
       },
     ],
   },
@@ -61,7 +64,7 @@ const cardsData = [
     jobName: "Deck Construction",
     customer: "Robert Garcia",
     vendor: "Home Depot, Ace Hardware",
-    cardNumber: "•••• •••• •••• 3456",
+    cardNumber: "4242 4242 4242 3456",
     expiryDate: "06/25",
     cvv: "789",
     billingZip: "10001",
@@ -79,7 +82,7 @@ const cardsData = [
     jobName: "Patio Installation",
     customer: "David Wilson",
     vendor: "Home Depot, Lowe's",
-    cardNumber: "•••• •••• •••• 9012",
+    cardNumber: "4242 4242 4242 9012",
     expiryDate: "05/25",
     cvv: "987",
     billingZip: "77002",
@@ -91,10 +94,12 @@ const cardsData = [
     role: "Landscaper",
     transactions: [
       {
+        id: "t2",
         date: "May 2, 2025",
         vendor: "Home Depot",
         amount: 950,
         description: "Patio materials and pavers",
+        receiptSubmitted: false,
       },
     ],
   },
@@ -104,7 +109,7 @@ const cardsData = [
     jobName: "Garage Conversion",
     customer: "Emily Rodriguez",
     vendor: "Home Depot, Menards",
-    cardNumber: "•••• •••• •••• 5678",
+    cardNumber: "4242 4242 4242 5678",
     expiryDate: "05/25",
     cvv: "654",
     billingZip: "90210",
@@ -116,16 +121,20 @@ const cardsData = [
     role: "Project Manager",
     transactions: [
       {
+        id: "t3",
         date: "Apr 25, 2025",
         vendor: "Home Depot",
         amount: 1200,
         description: "Drywall, insulation, and framing",
+        receiptSubmitted: true,
       },
       {
+        id: "t4",
         date: "Apr 27, 2025",
         vendor: "Menards",
         amount: 800,
         description: "Electrical supplies and fixtures",
+        receiptSubmitted: false,
       },
     ],
   },
@@ -135,7 +144,7 @@ const cardsData = [
     jobName: "Fence Installation",
     customer: "Thomas Brown",
     vendor: "Home Depot",
-    cardNumber: "•••• •••• •••• 1234",
+    cardNumber: "4242 4242 4242 1234",
     expiryDate: "05/25",
     cvv: "321",
     billingZip: "30303",
@@ -147,10 +156,12 @@ const cardsData = [
     role: "Installer",
     transactions: [
       {
+        id: "t5",
         date: "Apr 18, 2025",
         vendor: "Home Depot",
         amount: 600,
         description: "Fence posts and panels",
+        receiptSubmitted: true,
       },
     ],
   },
@@ -159,6 +170,8 @@ const cardsData = [
 export default function CardDetailPage({ params }: { params: { id: string } }) {
   const [cardDetails, setCardDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showFullCardNumber, setShowFullCardNumber] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
 
   useEffect(() => {
     // Simulate API call to fetch card details
@@ -212,11 +225,15 @@ export default function CardDetailPage({ params }: { params: { id: string } }) {
     }
   }
 
-  // Update the handleTextCard function to include the separated role
+  // Update the handleTextCard function to include the separated role and full card number
   const handleTextCard = () => {
     if (!cardDetails) return
 
+    const cardUrl = `${window.location.origin}/cards/${cardDetails.id}`
+
     const message = `JobVault Virtual Card Details:
+Job: ${cardDetails.jobName}
+Customer: ${cardDetails.customer}
 Card #: ${cardDetails.cardNumber}
 Funds: $${cardDetails.remainingAmount.toFixed(2)}
 Vendor(s): ${cardDetails.vendor}
@@ -226,18 +243,26 @@ Billing Zip: ${cardDetails.billingZip}
 Issued To: ${cardDetails.issuedTo}
 Role: ${cardDetails.role}
 
-This is a materials-only card that can only be used at the specified vendors.`
+Card Link: ${cardUrl}
+
+This is a materials-only card that can only be used at the specified vendors.
+
+To submit receipts, text them to +18886395525`
 
     window.location.href = `sms:?&body=${encodeURIComponent(message)}`
   }
 
-  // Update the handleEmailCard function to include the separated role
+  // Update the handleEmailCard function to include the separated role and full card number
   const handleEmailCard = () => {
     if (!cardDetails) return
+
+    const cardUrl = `${window.location.origin}/cards/${cardDetails.id}`
 
     const subject = "JobVault Virtual Card Details"
     const body = `JobVault Virtual Card Details:
 
+Job: ${cardDetails.jobName}
+Customer: ${cardDetails.customer}
 Card #: ${cardDetails.cardNumber}
 Funds: $${cardDetails.remainingAmount.toFixed(2)}
 Vendor(s): ${cardDetails.vendor}
@@ -247,16 +272,23 @@ Billing Zip: ${cardDetails.billingZip}
 Issued To: ${cardDetails.issuedTo}
 Role: ${cardDetails.role}
 
+Card Link: ${cardUrl}
+
 This is a materials-only card that can only be used at the specified vendors.
 
-Job: ${cardDetails.jobName}
-Customer: ${cardDetails.customer}
-Issued Date: ${cardDetails.issuedDate}
+To submit receipts, text them to +18886395525
 
 Thank you,
 JobVault Team`
 
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+
+  const handleCopyLink = () => {
+    const cardUrl = `${window.location.origin}/cards/${cardDetails.id}`
+    navigator.clipboard.writeText(cardUrl)
+    setCopySuccess(true)
+    setTimeout(() => setCopySuccess(false), 2000)
   }
 
   return (
@@ -285,6 +317,50 @@ JobVault Team`
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* SMS Number Tile */}
+              <Card className="bg-black text-white">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-gray-400 mb-2">SMS Number</h3>
+                      <p className="text-2xl font-bold">+18886395525</p>
+                      <p className="text-sm text-gray-400 mt-1">Text your receipts to this number</p>
+                    </div>
+                    <Phone className="h-5 w-5 text-gray-400" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Total Spent Tile */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-muted-foreground text-sm mb-1">Total Spent</h3>
+                      <p className="text-2xl font-bold">
+                        ${(cardDetails.initialAmount - cardDetails.remainingAmount).toFixed(2)}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">of ${cardDetails.initialAmount.toFixed(2)}</p>
+                    </div>
+                    <div className="h-5 w-5 text-muted-foreground">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                      </svg>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
                 <CardTitle>Virtual Card</CardTitle>
@@ -295,7 +371,19 @@ JobVault Team`
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="text-xs opacity-80">MATERIALS ONLY</div>
-                      <div className="mt-4 text-xl font-bold">{cardDetails.cardNumber}</div>
+                      <div className="mt-4 text-xl font-bold flex items-center">
+                        {showFullCardNumber
+                          ? cardDetails.cardNumber
+                          : cardDetails.cardNumber.replace(/\d{4} \d{4} \d{4}/, "•••• •••• ••••")}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2 text-white hover:text-white/80 p-0"
+                          onClick={() => setShowFullCardNumber(!showFullCardNumber)}
+                        >
+                          {showFullCardNumber ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <ShieldCheck className="h-5 w-5" />
@@ -354,45 +442,66 @@ JobVault Team`
                     </div>
                   </div>
                 </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Card Transactions</h3>
-
-                  {cardDetails.transactions.length > 0 ? (
-                    cardDetails.transactions.map((transaction: any, index: number) => (
-                      <div key={index} className="flex items-start p-3 rounded-md bg-secondary/50">
-                        <div className="mr-4 flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-purple-900/20 flex items-center justify-center">
-                            <Receipt className="h-5 w-5 text-purple-400" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between">
-                            <div className="font-medium">{transaction.vendor}</div>
-                            <div className="text-red-400">-${transaction.amount.toFixed(2)}</div>
-                          </div>
-                          <div className="text-sm text-muted-foreground">{transaction.date}</div>
-                          <div className="text-sm mt-1">{transaction.description}</div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-muted-foreground p-4">No transactions yet</div>
-                  )}
-                </div>
               </CardContent>
-              <CardFooter>
-                {cardDetails.status === "active" && (
+            </Card>
+
+            {/* Transactions Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Transactions</CardTitle>
+                <CardDescription>History of all transactions for this card</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {cardDetails.transactions.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Vendor</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead className="text-right">Receipt</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {cardDetails.transactions.map((transaction: any, index: number) => (
+                        <TableRow key={transaction.id || index}>
+                          <TableCell>{transaction.date}</TableCell>
+                          <TableCell>{transaction.vendor}</TableCell>
+                          <TableCell>{transaction.description}</TableCell>
+                          <TableCell className="text-right text-red-400">-${transaction.amount.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">
+                            {transaction.receiptSubmitted ? (
+                              <Badge variant="outline" className="bg-green-900/20 text-green-400">
+                                Submitted
+                              </Badge>
+                            ) : (
+                              <Button size="sm" variant="outline" asChild>
+                                <Link href="/receipt">
+                                  <Receipt className="mr-1 h-3 w-3" />
+                                  Submit
+                                </Link>
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center text-muted-foreground p-4">No transactions yet</div>
+                )}
+              </CardContent>
+              {cardDetails.status === "active" && (
+                <CardFooter>
                   <Button className="w-full bg-blue hover:bg-blue-dark" asChild>
                     <Link href="/receipt">
                       <Receipt className="mr-2 h-4 w-4" />
                       Submit Receipt
                     </Link>
                   </Button>
-                )}
-              </CardFooter>
+                </CardFooter>
+              )}
             </Card>
           </div>
 
@@ -405,7 +514,19 @@ JobVault Team`
               <CardContent className="space-y-4">
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-muted-foreground">Card Number</div>
-                  <div>{cardDetails.cardNumber}</div>
+                  <div className="flex items-center">
+                    {showFullCardNumber
+                      ? cardDetails.cardNumber
+                      : cardDetails.cardNumber.replace(/\d{4} \d{4} \d{4}/, "•••• •••• ••••")}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-2 p-0"
+                      onClick={() => setShowFullCardNumber(!showFullCardNumber)}
+                    >
+                      {showFullCardNumber ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-sm font-medium text-muted-foreground">Expiry Date</div>
@@ -474,6 +595,10 @@ JobVault Team`
                     </svg>
                     Email card details
                   </Button>
+                  <Button variant="outline" className="w-full justify-start text-left" onClick={handleCopyLink}>
+                    <LinkIcon className="h-5 w-5 mr-2" />
+                    {copySuccess ? "Link copied!" : "Copy link to card"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -500,26 +625,6 @@ JobVault Team`
                 </Button>
               </CardContent>
             </Card>
-
-            {cardDetails.status === "active" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button className="w-full bg-blue hover:bg-blue-dark" asChild>
-                    <Link href="/receipt">
-                      <Receipt className="mr-2 h-4 w-4" />
-                      Submit Receipt
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={handleTextCard}>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Text Card Details
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
       </main>

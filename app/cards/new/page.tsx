@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CreditCard, ShieldCheck } from "lucide-react"
+import { ArrowLeft, CreditCard, LinkIcon, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,9 +18,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 
 // Sample data for jobs with deposits paid but no cards issued yet
@@ -60,6 +60,7 @@ export default function NewCardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showCardDialog, setShowCardDialog] = useState(false)
   const [newCard, setNewCard] = useState<any>(null)
+  const [copySuccess, setCopySuccess] = useState(false)
   // Add issuedTo state
   const [issuedTo, setIssuedTo] = useState("")
   const [role, setRole] = useState("")
@@ -90,16 +91,17 @@ export default function NewCardPage() {
       if (!job) return
 
       const amount = Number.parseFloat(cardAmount) || job.depositAmount
-      const cardNumber = "•••• •••• •••• " + Math.floor(1000 + Math.random() * 9000).toString()
+      const cardId = Math.random().toString(36).substring(2, 10)
+      const cardNumber = "4242 4242 4242 " + Math.floor(1000 + Math.random() * 9000).toString()
       const expiryDate = "06/25" // In a real app, this would be calculated
 
       setNewCard({
-        id: Math.random().toString(36).substring(2, 10),
+        id: cardId,
         jobId: job.id,
         jobName: job.jobName,
         customer: job.customer,
         vendor: selectedVendors.join(", "),
-        cardNumber: "•••• •••• •••• " + Math.floor(1000 + Math.random() * 9000).toString(),
+        cardNumber: cardNumber,
         expiryDate: "06/25", // In a real app, this would be calculated
         cvv: Math.floor(100 + Math.random() * 900).toString(), // Generate random 3-digit CVV
         billingZip: "94105", // Example billing zip
@@ -117,7 +119,13 @@ export default function NewCardPage() {
   }
 
   const handleTextCard = () => {
+    if (!newCard) return
+
+    const cardUrl = `${window.location.origin}/cards/${newCard.id}`
+
     const message = `JobVault Virtual Card Details:
+Job: ${newCard.jobName}
+Customer: ${newCard.customer}
 Card #: ${newCard.cardNumber}
 Funds: $${Number.parseFloat(cardAmount).toFixed(2)}
 Vendor(s): ${newCard.vendor}
@@ -127,15 +135,25 @@ Billing Zip: ${newCard.billingZip}
 Issued To: ${newCard.issuedTo}
 Role: ${newCard.role}
 
-This is a materials-only card that can only be used at the specified vendors.`
+Card Link: ${cardUrl}
+
+This is a materials-only card that can only be used at the specified vendors.
+
+To submit receipts, text them to +18886395525`
 
     window.location.href = `sms:?&body=${encodeURIComponent(message)}`
   }
 
   const handleEmailCard = () => {
+    if (!newCard) return
+
+    const cardUrl = `${window.location.origin}/cards/${newCard.id}`
+
     const subject = "JobVault Virtual Card Details"
     const body = `JobVault Virtual Card Details:
 
+Job: ${newCard.jobName}
+Customer: ${newCard.customer}
 Card #: ${newCard.cardNumber}
 Funds: $${Number.parseFloat(cardAmount).toFixed(2)}
 Vendor(s): ${newCard.vendor}
@@ -145,16 +163,25 @@ Billing Zip: ${newCard.billingZip}
 Issued To: ${newCard.issuedTo}
 Role: ${newCard.role}
 
+Card Link: ${cardUrl}
+
 This is a materials-only card that can only be used at the specified vendors.
 
-Job: ${newCard.jobName}
-Customer: ${newCard.customer}
-Issued Date: ${newCard.issuedDate}
+To submit receipts, text them to +18886395525
 
 Thank you,
 JobVault Team`
 
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+
+  const handleCopyLink = () => {
+    if (!newCard) return
+
+    const cardUrl = `${window.location.origin}/cards/${newCard.id}`
+    navigator.clipboard.writeText(cardUrl)
+    setCopySuccess(true)
+    setTimeout(() => setCopySuccess(false), 2000)
   }
 
   return (
@@ -438,6 +465,10 @@ JobVault Team`
                       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                     </svg>
                     Email card details
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-left" onClick={handleCopyLink}>
+                    <LinkIcon className="h-5 w-5 mr-2" />
+                    {copySuccess ? "Link copied!" : "Copy link to card"}
                   </Button>
                 </div>
               </div>
