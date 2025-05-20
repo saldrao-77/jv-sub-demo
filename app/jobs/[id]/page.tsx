@@ -1,262 +1,258 @@
-import { Suspense } from "react"
-import { notFound } from "next/navigation"
-import { getJob } from "@/lib/actions"
-import { Header } from "@/components/header"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils"
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowLeft, CheckCircle2, CreditCard, Receipt, ShieldCheck } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
+import { Header } from "@/components/header"
 
-interface JobDetailPageProps {
-  params: {
-    id: string
+export default function JobDetailsPage({ params }: { params: { id: string } }) {
+  const [isCardIssued, setIsCardIssued] = useState(false)
+
+  const handleIssueCard = () => {
+    setIsCardIssued(true)
   }
-}
 
-export default async function JobDetailPage({ params }: JobDetailPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 container py-6 md:py-10">
-        <Suspense fallback={<div>Loading...</div>}>
-          <JobDetail id={params.id} />
-        </Suspense>
-      </main>
-    </div>
-  )
-}
-
-async function JobDetail({ id }: { id: string }) {
-  const job = await getJob(id)
-
-  if (!job) {
-    notFound()
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/jobs">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="sr-only">Back to jobs</span>
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{job.name}</h1>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Badge className={getStatusColor(job.status)}>{job.status}</Badge>
-              <span>•</span>
-              <span>Started {formatDate(job.start_date)}</span>
-            </div>
-          </div>
+        <div className="mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back to Dashboard
+          </Link>
         </div>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Deposit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(job.deposit_amount)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(job.spent_amount)}</div>
-            <p className="text-xs text-muted-foreground">
-              {job.deposit_amount > 0
-                ? `${((job.spent_amount / job.deposit_amount) * 100).toFixed(1)}% of deposit`
-                : "0% of deposit"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Available Funds</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(job.deposit_amount - job.spent_amount)}</div>
-            <p className="text-xs text-muted-foreground">
-              {job.deposit_amount > 0
-                ? `${(((job.deposit_amount - job.spent_amount) / job.deposit_amount) * 100).toFixed(1)}% of deposit`
-                : "0% of deposit"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Cards</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {job.cards?.filter((card) => card.status === "active").length || 0}
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-2 space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Bathroom Renovation</h1>
+              <p className="text-muted-foreground">Job for Sarah Johnson</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="cards">Cards</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <div className="font-medium">Name</div>
-                  <div>{job.customer?.name}</div>
-                </div>
-                {job.customer?.email && (
-                  <div>
-                    <div className="font-medium">Email</div>
-                    <div>{job.customer.email}</div>
-                  </div>
-                )}
-                {job.customer?.phone && (
-                  <div>
-                    <div className="font-medium">Phone</div>
-                    <div>{job.customer.phone}</div>
-                  </div>
-                )}
-                {job.address && (
-                  <div>
-                    <div className="font-medium">Address</div>
-                    <div>{job.address}</div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Job Details</CardTitle>
+                <CardTitle>Materials Deposit Details</CardTitle>
+                <CardDescription>Materials-only deposit for this job</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {job.description && (
-                  <div>
-                    <div className="font-medium">Description</div>
-                    <div className="text-sm text-muted-foreground">{job.description}</div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">Amount</div>
+                    <div className="text-lg font-semibold">$850.00</div>
                   </div>
-                )}
-                <div>
-                  <div className="font-medium">Vendors</div>
-                  {job.vendors && job.vendors.length > 0 ? (
-                    <div className="space-y-1 mt-1">
-                      {job.vendors.map((vendor) => (
-                        <div key={vendor.id} className="text-sm">
-                          {vendor.name}
-                        </div>
-                      ))}
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">Vendor</div>
+                    <div className="text-lg font-semibold">Home Depot</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">Status</div>
+                    <div className="inline-flex items-center rounded-full bg-green-900/20 px-2.5 py-0.5 text-sm font-medium text-green-400">
+                      <CheckCircle2 className="mr-1 h-4 w-4" />
+                      Funds Received
                     </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">No vendors assigned</div>
-                  )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="rounded-md bg-blue/10 p-4">
+                  <div className="flex">
+                    <CheckCircle2 className="h-5 w-5 text-blue mr-2 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">Materials funds received for Bathroom Renovation</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Funds can only be used at Home Depot and will expire in 30 days if unused.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button disabled={isCardIssued} className="bg-blue hover:bg-blue-dark">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      {isCardIssued ? "Card Issued" : "Get Virtual Materials Card"}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Issue Virtual Card</DialogTitle>
+                      <DialogDescription>This card can only be used at Home Depot for up to $850.00</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="rounded-md bg-blue/10 p-3 text-sm">
+                        <p className="font-medium">Materials-Only Card</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          This card is for purchasing materials only, in compliance with California law.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Vendor:</span>
+                          <span className="font-medium">Home Depot</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Amount Limit:</span>
+                          <span className="font-medium">$850.00</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Expiration:</span>
+                          <span className="font-medium">30 days</span>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleIssueCard} className="bg-blue hover:bg-blue-dark">
+                        Issue Virtual Card
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </CardFooter>
+            </Card>
+
+            {isCardIssued && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Virtual Card</CardTitle>
+                  <CardDescription>Use this card to purchase materials at Home Depot</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl bg-gradient-to-r from-blue-dark to-blue p-6 text-white">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="text-xs opacity-80">MATERIALS ONLY</div>
+                        <div className="mt-4 text-xl font-bold">•••• •••• •••• 4589</div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <ShieldCheck className="h-5 w-5" />
+                        <span className="text-sm font-medium">Vendor Locked</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex justify-between items-end">
+                      <div>
+                        <div className="text-xs opacity-80">VALID THRU</div>
+                        <div className="text-sm font-medium">06/25</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs opacity-80">AVAILABLE</div>
+                        <div className="text-lg font-bold">$850.00</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md bg-secondary p-4 text-center">
+                    <p className="font-medium">Usable only at Home Depot for up to $850.00</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Tap to pay with your phone or use the card details above
+                    </p>
+                  </div>
+
+                  <Button variant="outline" className="w-full">
+                    <Receipt className="mr-2 h-4 w-4" />
+                    Text Receipt After Purchase
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Customer Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Name</div>
+                  <div>Sarah Johnson</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Email</div>
+                  <div>sarah.johnson@example.com</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Phone</div>
+                  <div>(555) 123-4567</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Job Timeline</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex">
+                    <div className="mr-4 flex flex-col items-center">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-900/20 text-green-400">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <div className="h-full w-px bg-border"></div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Payment Received</div>
+                      <div className="text-sm text-muted-foreground">May 18, 2025 • 10:24 AM</div>
+                    </div>
+                  </div>
+
+                  <div className="flex">
+                    <div className="mr-4 flex flex-col items-center">
+                      {isCardIssued ? (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-900/20 text-green-400">
+                          <CheckCircle2 className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                          <CreditCard className="h-4 w-4" />
+                        </div>
+                      )}
+                      <div className="h-full w-px bg-border"></div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Virtual Card Issued</div>
+                      <div className="text-sm text-muted-foreground">
+                        {isCardIssued ? "May 19, 2025 • 10:29 AM" : "Pending"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex">
+                    <div className="mr-4 flex flex-col items-center">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                        <Receipt className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="font-medium">Materials Purchased</div>
+                      <div className="text-sm text-muted-foreground">Pending</div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="transactions" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Transactions</CardTitle>
-              <CardDescription>All transactions for this job</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!job.transactions || job.transactions.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">No transactions found</p>
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <div className="grid grid-cols-4 gap-4 p-4 font-medium">
-                    <div>Date</div>
-                    <div>Type</div>
-                    <div>Vendor</div>
-                    <div className="text-right">Amount</div>
-                  </div>
-                  {job.transactions.map((transaction) => (
-                    <div key={transaction.id} className="grid grid-cols-4 gap-4 p-4 border-t items-center">
-                      <div>{formatDate(transaction.date)}</div>
-                      <div>
-                        <Badge className={getStatusColor(transaction.type)}>{transaction.type}</Badge>
-                      </div>
-                      <div>{transaction.vendor?.name || "N/A"}</div>
-                      <div
-                        className={`text-right font-medium ${
-                          transaction.type === "deposit"
-                            ? "text-green-600"
-                            : transaction.type === "expense"
-                              ? "text-red-600"
-                              : "text-blue-600"
-                        }`}
-                      >
-                        {transaction.type === "deposit" ? "+" : transaction.type === "expense" ? "-" : "+"}
-                        {formatCurrency(transaction.amount)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cards" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cards</CardTitle>
-              <CardDescription>All cards issued for this job</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!job.cards || job.cards.length === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">No cards found</p>
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <div className="grid grid-cols-4 gap-4 p-4 font-medium">
-                    <div>Card Number</div>
-                    <div>Issued Date</div>
-                    <div>Status</div>
-                    <div className="text-right">Available Amount</div>
-                  </div>
-                  {job.cards.map((card) => (
-                    <div key={card.id} className="grid grid-cols-4 gap-4 p-4 border-t items-center">
-                      <div>
-                        {card.card_number
-                          ? `**** **** **** ${card.card_number.slice(-4)}`
-                          : "Card number not available"}
-                      </div>
-                      <div>{formatDate(card.issued_at)}</div>
-                      <div>
-                        <Badge className={getStatusColor(card.status)}>{card.status}</Badge>
-                      </div>
-                      <div className="text-right font-medium">{formatCurrency(card.available_amount)}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </main>
     </div>
   )
 }
