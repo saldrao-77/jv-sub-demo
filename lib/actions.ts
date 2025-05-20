@@ -74,6 +74,7 @@ export async function createVendor(vendor: Partial<Vendor>) {
 
 // Job actions
 export async function getJobs() {
+  console.log("Fetching jobs...")
   const { data, error } = await supabase
     .from("jobs")
     .select(`
@@ -87,6 +88,7 @@ export async function getJobs() {
     return []
   }
 
+  console.log("Jobs fetched:", data?.length || 0)
   return data as Job[]
 }
 
@@ -179,6 +181,7 @@ export async function createJob(formData: FormData) {
 
 // Transaction actions
 export async function getTransactions() {
+  console.log("Fetching transactions...")
   const { data, error } = await supabase
     .from("transactions")
     .select(`
@@ -193,6 +196,7 @@ export async function getTransactions() {
     return []
   }
 
+  console.log("Transactions fetched:", data?.length || 0)
   return data as Transaction[]
 }
 

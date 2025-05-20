@@ -48,52 +48,58 @@ export default async function DashboardPage() {
 }
 
 async function DashboardStats() {
-  const jobs = await getJobs()
+  try {
+    const jobs = await getJobs()
+    console.log("Dashboard stats jobs:", jobs?.length || 0)
 
-  const totalDeposits = jobs.reduce((sum, job) => sum + job.deposit_amount, 0)
-  const totalSpent = jobs.reduce((sum, job) => sum + job.spent_amount, 0)
-  const availableFunds = totalDeposits - totalSpent
+    const totalDeposits = jobs.reduce((sum, job) => sum + job.deposit_amount, 0)
+    const totalSpent = jobs.reduce((sum, job) => sum + job.spent_amount, 0)
+    const availableFunds = totalDeposits - totalSpent
 
-  const activeJobs = jobs.filter((job) => job.status === "active")
+    const activeJobs = jobs.filter((job) => job.status === "active")
 
-  return (
-    <div className="grid gap-6 md:grid-cols-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Total Deposits</CardTitle>
-          <CardDescription>Materials deposits received</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">{formatCurrency(totalDeposits)}</div>
-          <p className="text-xs text-muted-foreground mt-1">From {jobs.length} jobs</p>
-        </CardContent>
-      </Card>
+    return (
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Deposits</CardTitle>
+            <CardDescription>Materials deposits received</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{formatCurrency(totalDeposits)}</div>
+            <p className="text-xs text-muted-foreground mt-1">From {jobs.length} jobs</p>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Materials Purchased</CardTitle>
-          <CardDescription>Total spent on materials</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">{formatCurrency(totalSpent)}</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {totalDeposits > 0 ? `${((totalSpent / totalDeposits) * 100).toFixed(1)}% of deposits` : "0% of deposits"}
-          </p>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Materials Purchased</CardTitle>
+            <CardDescription>Total spent on materials</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{formatCurrency(totalSpent)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {totalDeposits > 0 ? `${((totalSpent / totalDeposits) * 100).toFixed(1)}% of deposits` : "0% of deposits"}
+            </p>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Funds</CardTitle>
-          <CardDescription>Ready to use for materials</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-blue">{formatCurrency(availableFunds)}</div>
-          <p className="text-xs text-muted-foreground mt-1">Across {activeJobs.length} active jobs</p>
-        </CardContent>
-      </Card>
-    </div>
-  )
+        <Card>
+          <CardHeader>
+            <CardTitle>Available Funds</CardTitle>
+            <CardDescription>Ready to use for materials</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue">{formatCurrency(availableFunds)}</div>
+            <p className="text-xs text-muted-foreground mt-1">Across {activeJobs.length} active jobs</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  } catch (error) {
+    console.error("Error in DashboardStats:", error)
+    return <div>Error loading dashboard stats. Check console for details.</div>
+  }
 }
 
 async function RecentJobs() {
