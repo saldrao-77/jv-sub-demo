@@ -140,7 +140,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
         <div className="grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold mb-2">Materials Pre-payment</h1>
+              <h1 className="text-2xl font-bold mb-2">UPDATED: Materials Pre-payment</h1>
               <p className="text-muted-foreground">
                 This payment is for materials only. Funds are held securely and can only be used at the vendors
                 specified.

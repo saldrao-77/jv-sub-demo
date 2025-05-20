@@ -71,7 +71,8 @@ export default function NewJobPage() {
       setIsSubmitting(false)
       // Generate a random payment link that points to the actual payment page
       const randomId = Math.random().toString(36).substring(2, 10)
-      setPaymentLink(`https://kzml39k3eu0lvo8sd937.lite.vusercontent.net/payment/z684eut8`)
+      // Make sure this points to the correct URL structure for your updated payment page
+      setPaymentLink(`${window.location.origin}/payment/${randomId}`)
       setShowShareDialog(true)
     }, 1500)
   }
