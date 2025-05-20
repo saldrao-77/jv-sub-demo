@@ -16,9 +16,9 @@ export async function seedDatabase() {
       return { success: true, message: "Database already has data" }
     }
 
-    // Create a test user
+    // Generate a valid UUID for the test user
     const testUser = {
-      id: "test-user-id", // In a real app, this would be a UUID
+      id: "d8a7f132-2d4b-4f23-8b49-5fa4a52d6b35", // Valid UUID format
       email: "test@example.com",
       full_name: "Test User",
       company_name: "Test Company",
