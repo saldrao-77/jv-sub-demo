@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { CheckCircle2, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -87,40 +87,51 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
   if (isSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-900/20">
-              <CheckCircle2 className="h-6 w-6 text-green-400" />
+        <Card className="w-full max-w-lg">
+          <CardContent className="pt-10 pb-8 px-8 flex flex-col items-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-900/20">
+              <CheckCircle2 className="h-8 w-8 text-green-400" />
             </div>
-            <CardTitle className="text-xl">Payment Successful</CardTitle>
-            <CardDescription>Your materials pre-payment has been received</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <div className="rounded-lg bg-secondary p-4 text-center">
+            <h1 className="text-2xl font-bold mb-2 text-center">Payment Successful</h1>
+            <p className="text-muted-foreground text-center mb-8">Your materials pre-payment has been received</p>
+
+            <div className="w-full rounded-lg bg-secondary p-6 text-center mb-6">
               <div className="text-sm text-muted-foreground">Amount Paid</div>
-              <div className="text-2xl font-bold">${jobDetails.amount.toFixed(2)}</div>
+              <div className="text-3xl font-bold mt-1">${jobDetails.amount.toFixed(2)}</div>
             </div>
-            <div className="space-y-1 text-sm">
-              <p>Job: {jobDetails.job}</p>
-              <p>Vendors: {jobDetails.vendors || "Home Depot, Lowe's"}</p>
-              <p>Reference: JV-{params.id}</p>
+
+            <div className="w-full space-y-4 mb-6">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Job:</span>
+                <span className="font-medium">{jobDetails.job}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Vendors:</span>
+                <span className="font-medium">{jobDetails.vendors || "Home Depot, Lowe's"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Reference:</span>
+                <span className="font-medium">JV-{params.id}</span>
+              </div>
             </div>
-            <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-blue" />
-              <span>Funds are held securely and can only be used at the specified vendors</span>
+
+            <div className="w-full flex items-center space-x-3 bg-blue/10 p-4 rounded-lg mb-8">
+              <ShieldCheck className="h-5 w-5 text-blue flex-shrink-0" />
+              <span className="text-sm">Funds are held securely and can only be used at the specified vendors</span>
+            </div>
+
+            <div className="w-full space-y-3">
+              <Button className="w-full" variant="outline" onClick={() => window.print()}>
+                Download Receipt
+              </Button>
+              <Button className="w-full bg-blue hover:bg-blue-dark" asChild>
+                <Link href={`/confirmation/${params.id}`}>View Order Status</Link>
+              </Button>
+              <div className="text-center text-xs text-muted-foreground mt-2">
+                A confirmation email has been sent to your email address
+              </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <Button className="w-full" variant="outline" onClick={() => window.print()}>
-              Download Receipt
-            </Button>
-            <Button className="w-full bg-blue hover:bg-blue-dark" asChild>
-              <Link href={`/confirmation/${params.id}`}>View Order Status</Link>
-            </Button>
-            <div className="text-center text-xs text-muted-foreground">
-              A confirmation email has been sent to your email address
-            </div>
-          </CardFooter>
         </Card>
       </div>
     )
@@ -140,7 +151,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
         <div className="grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold mb-2">UPDATED: Materials Pre-payment</h1>
+              <h1 className="text-2xl font-bold mb-2">Materials Pre-payment</h1>
               <p className="text-muted-foreground">
                 This payment is for materials only. Funds are held securely and can only be used at the vendors
                 specified.
@@ -156,21 +167,21 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="first-name">First Name</Label>
-                      <Input id="first-name" required />
+                      <Input id="first-name" name="firstName" required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="last-name">Last Name</Label>
-                      <Input id="last-name" required />
+                      <Input id="last-name" name="lastName" required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required />
+                    <Input id="email" name="email" type="email" required />
                     <p className="text-xs text-muted-foreground">For receipt and confirmation</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone (Optional)</Label>
-                    <Input id="phone" type="tel" />
+                    <Input id="phone" name="phone" type="tel" />
                   </div>
                 </CardContent>
               </Card>
@@ -248,23 +259,23 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <Card>
+            <Card className="sticky top-6">
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 <div className="space-y-1">
-                  <div className="font-medium">{jobDetails.job}</div>
+                  <div className="font-medium text-lg">{jobDetails.job}</div>
                   <div className="text-sm text-muted-foreground">Materials pre-payment</div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="text-sm font-medium">Customer Information</div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="text-muted-foreground">Name:</div>
                     <div>{jobDetails.customer || "Sarah Johnson"}</div>
                     <div className="text-muted-foreground">Email:</div>
-                    <div>{jobDetails.email || "sarah.johnson@example.com"}</div>
+                    <div className="truncate">{jobDetails.email || "sarah.johnson@example.com"}</div>
                     <div className="text-muted-foreground">Date:</div>
                     <div>{new Date().toLocaleDateString()}</div>
                     <div className="text-muted-foreground">Vendors:</div>
@@ -274,7 +285,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
 
                 <div className="rounded-md bg-secondary p-4">
                   <div className="flex items-center space-x-2 text-sm font-medium">
-                    <ShieldCheck className="h-4 w-4 text-blue" />
+                    <ShieldCheck className="h-5 w-5 text-blue" />
                     <span>Secure Materials-Only Deposit</span>
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
@@ -282,24 +293,24 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
                   </div>
                 </div>
 
-                <div className="rounded-md bg-blue/10 p-4 space-y-2">
+                <div className="rounded-md bg-blue/10 p-4 space-y-3">
                   <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-blue" />
+                    <CheckCircle2 className="h-5 w-5 text-blue" />
                     <span>Funds are held securely</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-blue" />
+                    <CheckCircle2 className="h-5 w-5 text-blue" />
                     <span>Can only be used at specified vendors</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-blue" />
+                    <CheckCircle2 className="h-5 w-5 text-blue" />
                     <span>You'll receive confirmation of purchase</span>
                   </div>
                 </div>
 
                 <Separator />
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span>${jobDetails.amount.toFixed(2)}</span>
@@ -308,7 +319,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
                     <span className="text-muted-foreground">Processing Fee</span>
                     <span>$0.00</span>
                   </div>
-                  <div className="flex justify-between font-medium">
+                  <div className="flex justify-between font-medium text-lg">
                     <span>Total</span>
                     <span>${jobDetails.amount.toFixed(2)}</span>
                   </div>
