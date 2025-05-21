@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
 
-// These environment variables are already set up
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 

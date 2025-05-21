@@ -1,62 +1,62 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import type { Session, User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
+import type React from "react"
+
+import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import type { User, Session } from "@supabase/supabase-js"
 
 type AuthContextType = {
   user: User | null
   session: Session | null
   isLoading: boolean
-  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any; data: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any; data: any }>
+  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
+  resetPassword: (email: string) => Promise<{ error: any }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession()
+    // Get session from Supabase
+    const getSession = async () => {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) {
+        console.error("Error getting session:", error)
+        setIsLoading(false)
+        return
+      }
 
-      setSession(session)
-      setUser(session?.user ?? null)
+      setSession(data.session)
+      setUser(data.session?.user || null)
       setIsLoading(false)
     }
 
-    getInitialSession()
+    getSession()
 
     // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session)
       setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-
-      // Force a router refresh to update server components
-      router.refresh()
+      setUser(session?.user || null)
     })
 
     return () => {
-      subscription.unsubscribe()
+      authListener.subscription.unsubscribe()
     }
-  }, [router])
+  }, [])
 
   const signUp = async (email: string, password: string, businessName: string) => {
     try {
-      // Use signUp with email confirmation
+      console.log("Signing up:", email, businessName)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -64,70 +64,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             business_name: businessName,
           },
-          // Make sure email confirmation is enabled
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
-      // Log the response for debugging
-      console.log("Signup response:", { data, error })
-
-      return { data, error }
-    } catch (err) {
-      console.error("Signup error:", err)
-      return {
-        data: null,
-        error: { message: "An unexpected error occurred during signup" },
-      }
+      console.log("Signup response:", data, error)
+      return { error }
+    } catch (error) {
+      console.error("Signup error:", error)
+      return { error }
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Signing in:", email)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      // Log the response for debugging
-      console.log("Sign in response:", { data, error })
+      console.log("Signin response:", data, error)
 
-      if (!error && data.user) {
+      if (!error) {
         router.push("/dashboard")
       }
 
-      return { data, error }
-    } catch (err) {
-      console.error("Sign in error:", err)
-      return {
-        data: null,
-        error: { message: "An unexpected error occurred during sign in" },
-      }
+      return { error }
+    } catch (error) {
+      console.error("Signin error:", error)
+      return { error }
     }
   }
 
   const signOut = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+  }
+
+  const resetPassword = async (email: string) => {
     try {
-      await supabase.auth.signOut()
-      router.push("/login")
-    } catch (err) {
-      console.error("Sign out error:", err)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      return { error }
+    } catch (error) {
+      console.error("Reset password error:", error)
+      return { error }
     }
   }
 
-  const value = {
-    user,
-    session,
-    isLoading,
-    signUp,
-    signIn,
-    signOut,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, session, isLoading, signUp, signIn, signOut, resetPassword }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider")

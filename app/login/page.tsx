@@ -2,16 +2,16 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
@@ -19,32 +19,47 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { signIn } = useAuth()
+
+  useEffect(() => {
+    // Check for query parameters
+    const emailVerified = searchParams.get("email_verified")
+    const resetSuccess = searchParams.get("reset") === "success"
+
+    if (emailVerified === "true") {
+      setSuccess("Email verified successfully! You can now sign in.")
+    } else if (resetSuccess) {
+      setSuccess("Password has been reset successfully. You can now sign in with your new password.")
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
-      // Direct authentication call with detailed logging
-      console.log("Attempting login with:", { email })
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      console.log("Login response:", { data, error })
+      const { error } = await signIn(email, password)
 
       if (error) {
-        setError(error.message)
-        return
-      }
+        console.error("Login error:", error)
 
-      // Redirect on success
-      router.push("/dashboard")
+        // Handle specific error cases
+        if (error.message.includes("Invalid login credentials")) {
+          setError("Invalid email or password. Please try again.")
+        } else if (error.message.includes("Email not confirmed")) {
+          setError("Please confirm your email before signing in. Check your inbox for a confirmation link.")
+        } else {
+          setError(error.message)
+        }
+      }
+      // Successful login will redirect in the signIn function
     } catch (err) {
-      console.error("Login error:", err)
+      console.error("Unexpected login error:", err)
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
@@ -68,6 +83,13 @@ export default function LoginPage() {
               <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="bg-green-900 border-green-800 text-white">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
 

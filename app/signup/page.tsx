@@ -5,12 +5,12 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SignupPage() {
@@ -20,6 +20,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const { signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,51 +28,28 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      // Log the signup attempt
-      console.log("Attempting signup with:", { email, businessName })
-
-      // Direct signup call with detailed logging
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            business_name: businessName,
-          },
-          emailRedirectTo: `${window.location.origin}/login`,
-        },
-      })
-
-      console.log("Signup response:", { data, error })
+      const { error } = await signUp(email, password, businessName)
 
       if (error) {
-        setError(error.message)
+        console.error("Signup error:", error)
+
+        if (error.message.includes("already registered")) {
+          setError("This email is already registered. Please sign in instead.")
+        } else {
+          setError(error.message)
+        }
         return
       }
 
       // Show success message
       setSuccess(true)
 
-      // Also create a user record in the database
-      if (data.user) {
-        try {
-          const { error: userError } = await supabase.from("users").insert({
-            id: data.user.id,
-            email: email,
-            business_name: businessName,
-          })
-
-          console.log("User record creation:", { userError })
-
-          if (userError) {
-            console.error("Error creating user record:", userError)
-          }
-        } catch (dbErr) {
-          console.error("Database error:", dbErr)
-        }
-      }
+      // Clear form
+      setEmail("")
+      setPassword("")
+      setBusinessName("")
     } catch (err) {
-      console.error("Signup error:", err)
+      console.error("Unexpected signup error:", err)
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
@@ -93,6 +71,7 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {success && (
               <Alert className="bg-green-900 border-green-800 text-white">
+                <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
                   Account created successfully! Please check your email for a confirmation link before signing in.
                 </AlertDescription>

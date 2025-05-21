@@ -14,7 +14,15 @@ export async function middleware(req: NextRequest) {
   const isAuthenticated = !!session
 
   // Define public routes that don't require authentication
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/payment", "/confirmation"]
+  const publicRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/payment",
+    "/confirmation",
+    "/auth/callback",
+  ]
 
   // Check if the current path is a public route
   const isPublicRoute = publicRoutes.some(

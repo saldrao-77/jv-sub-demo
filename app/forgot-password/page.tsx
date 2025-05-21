@@ -5,12 +5,12 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function ForgotPasswordPage() {
@@ -18,6 +18,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const { resetPassword } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,19 +26,19 @@ export default function ForgotPasswordPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
+      const { error } = await resetPassword(email)
 
       if (error) {
         setError(error.message)
         return
       }
 
+      // Show success message
       setSuccess(true)
+      setEmail("")
     } catch (err) {
       setError("An unexpected error occurred")
-      console.error("Password reset error:", err)
+      console.error("Reset password error:", err)
     } finally {
       setIsLoading(false)
     }
@@ -51,25 +52,25 @@ export default function ForgotPasswordPage() {
 
       <Card className="w-full max-w-md bg-[#1a1a1a] border-gray-800 text-white">
         <CardHeader>
-          <CardTitle className="text-2xl text-white">Forgot Password</CardTitle>
+          <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
           <CardDescription className="text-gray-400">
-            Enter your email and we'll send you a link to reset your password
+            Enter your email address and we'll send you a link to reset your password
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {success && (
+              <Alert className="bg-green-900 border-green-800 text-white">
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Password reset link sent! Check your email for instructions to reset your password.
+                </AlertDescription>
+              </Alert>
+            )}
             {error && (
               <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {success && (
-              <Alert className="bg-green-900 border-green-800 text-white">
-                <AlertDescription>
-                  Password reset link sent! Please check your email for instructions to reset your password.
-                </AlertDescription>
               </Alert>
             )}
 
@@ -87,12 +88,8 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isLoading || success}
-            >
-              {isLoading ? "Sending..." : "Send Reset Link"}
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+              {isLoading ? "Sending reset link..." : "Send Reset Link"}
             </Button>
           </form>
         </CardContent>

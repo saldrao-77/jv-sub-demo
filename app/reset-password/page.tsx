@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -21,21 +21,32 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  useEffect(() => {
+    // Check if we have the access token in the URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    if (!hashParams.get("access_token")) {
+      setError("Invalid or expired reset link. Please request a new password reset.")
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError(null)
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
-      setIsLoading(false)
       return
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
     try {
-      const { error } = await supabase.auth.updateUser({
-        password,
-      })
+      const { error } = await supabase.auth.updateUser({ password })
 
       if (error) {
         setError(error.message)
@@ -46,7 +57,7 @@ export default function ResetPasswordPage() {
       router.push("/login?reset=success")
     } catch (err) {
       setError("An unexpected error occurred")
-      console.error("Password reset error:", err)
+      console.error("Update password error:", err)
     } finally {
       setIsLoading(false)
     }
@@ -60,8 +71,8 @@ export default function ResetPasswordPage() {
 
       <Card className="w-full max-w-md bg-[#1a1a1a] border-gray-800 text-white">
         <CardHeader>
-          <CardTitle className="text-2xl text-white">Reset Password</CardTitle>
-          <CardDescription className="text-gray-400">Enter your new password</CardDescription>
+          <CardTitle className="text-2xl text-white">Set New Password</CardTitle>
+          <CardDescription className="text-gray-400">Create a new password for your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,12 +96,11 @@ export default function ResetPasswordPage() {
                 minLength={6}
                 className="bg-[#2a2a2a] border-gray-700 text-white"
               />
-              <p className="text-xs text-gray-400">Password must be at least 6 characters long</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirm-password" className="text-gray-300">
-                Confirm Password
+                Confirm New Password
               </Label>
               <Input
                 id="confirm-password"
@@ -101,10 +111,11 @@ export default function ResetPasswordPage() {
                 minLength={6}
                 className="bg-[#2a2a2a] border-gray-700 text-white"
               />
+              <p className="text-xs text-gray-400">Password must be at least 6 characters long</p>
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
-              {isLoading ? "Resetting..." : "Reset Password"}
+              {isLoading ? "Updating password..." : "Update Password"}
             </Button>
           </form>
         </CardContent>
