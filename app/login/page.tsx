@@ -27,7 +27,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // Simple direct authentication call
+      // Direct authentication call with detailed logging
+      console.log("Attempting login with:", { email })
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

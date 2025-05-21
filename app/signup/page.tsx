@@ -27,7 +27,10 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      // Simple direct signup call
+      // Log the signup attempt
+      console.log("Attempting signup with:", { email, businessName })
+
+      // Direct signup call with detailed logging
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -51,14 +54,20 @@ export default function SignupPage() {
 
       // Also create a user record in the database
       if (data.user) {
-        const { error: userError } = await supabase.from("users").insert({
-          id: data.user.id,
-          email: email,
-          business_name: businessName,
-        })
+        try {
+          const { error: userError } = await supabase.from("users").insert({
+            id: data.user.id,
+            email: email,
+            business_name: businessName,
+          })
 
-        if (userError) {
-          console.error("Error creating user record:", userError)
+          console.log("User record creation:", { userError })
+
+          if (userError) {
+            console.error("Error creating user record:", userError)
+          }
+        } catch (dbErr) {
+          console.error("Database error:", dbErr)
         }
       }
     } catch (err) {
