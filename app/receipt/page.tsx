@@ -47,12 +47,15 @@ export default function ReceiptPage() {
       job: job === "bathroom" ? "Bathroom Renovation" : "Kitchen Remodel",
       notes: notes,
       image: isUploaded ? "/store-receipt.png" : null,
-      amount: 0, // This would be extracted from the receipt or entered by the user
+      amount: 0, // Receipt with 0 transaction value as requested
       timestamp: new Date().toISOString(),
       vendor: "Home Depot",
+      // Store under job transactions
+      jobId: jobId || "1", // Use the prefilled jobId or default to "1"
+      transactionType: "Receipt",
     }
 
-    console.log("Receipt added:", newReceiptData)
+    console.log("Receipt added to job transactions:", newReceiptData)
     setReceiptData(newReceiptData)
     setIsSubmitted(true)
   }

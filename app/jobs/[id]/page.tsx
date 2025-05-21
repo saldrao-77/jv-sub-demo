@@ -310,7 +310,7 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
               <CardHeader>
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {" "}
                 {/* Increased spacing between buttons */}
                 <Link href={`/cards/new?jobId=${params.id}`} className="w-full block">
