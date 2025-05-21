@@ -3,10 +3,9 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,8 +20,6 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const router = useRouter()
-  const { signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,30 +27,42 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      const { data, error } = await signUp(email, password, businessName)
+      // Simple direct signup call
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            business_name: businessName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      })
+
+      console.log("Signup response:", { data, error })
 
       if (error) {
-        console.error("Signup error:", error)
-        if (error.message.includes("already registered")) {
-          setError("This email is already registered. Please sign in instead.")
-        } else {
-          setError(error.message)
-        }
-        return
-      }
-
-      console.log("Signup successful:", data)
-
-      // Check if email confirmation is needed
-      if (data?.user?.identities?.length === 0) {
-        setError("This email is already registered. Please sign in instead.")
+        setError(error.message)
         return
       }
 
       // Show success message
       setSuccess(true)
+
+      // Also create a user record in the database
+      if (data.user) {
+        const { error: userError } = await supabase.from("users").insert({
+          id: data.user.id,
+          email: email,
+          business_name: businessName,
+        })
+
+        if (userError) {
+          console.error("Error creating user record:", userError)
+        }
+      }
     } catch (err) {
-      console.error("Unexpected signup error:", err)
+      console.error("Signup error:", err)
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)

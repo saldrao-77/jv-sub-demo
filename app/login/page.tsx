@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,7 +20,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,27 +27,23 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { data, error } = await signIn(email, password)
+      // Simple direct authentication call
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      console.log("Login response:", { data, error })
 
       if (error) {
-        console.error("Login error:", error)
-
-        // Handle specific error cases
-        if (error.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password. Please try again.")
-        } else if (error.message.includes("Email not confirmed")) {
-          setError("Please confirm your email before signing in. Check your inbox for a confirmation link.")
-        } else {
-          setError(error.message)
-        }
+        setError(error.message)
         return
       }
 
-      console.log("Login successful:", data)
-
-      // Redirect will be handled in the signIn function
+      // Redirect on success
+      router.push("/dashboard")
     } catch (err) {
-      console.error("Unexpected login error:", err)
+      console.error("Login error:", err)
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
