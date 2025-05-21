@@ -23,6 +23,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
     job: "Bathroom Renovation",
     customer: "",
     email: "",
+    phone: "",
     vendors: "",
     amount: 850.0,
     description: "",
@@ -49,7 +50,7 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
       email: "sarah.johnson@example.com",
       vendors: "Home Depot, Lowe's",
       amount: 850.0,
-      description: "Materials for bathroom renovation including tiles, fixtures, and plumbing supplies.",
+      description: "Covers materials only—labor billed separately",
     })
   }, [params.id])
 
@@ -287,6 +288,13 @@ export default function PaymentPage({ params }: { params: { id: string } }) {
                     <div>{jobDetails.vendors || "Home Depot, Lowe's"}</div>
                   </div>
                 </div>
+
+                {jobDetails.description && (
+                  <div className="space-y-1">
+                    <div className="text-muted-foreground">Notes:</div>
+                    <div>{jobDetails.description}</div>
+                  </div>
+                )}
 
                 <div className="rounded-md bg-secondary p-4">
                   <div className="flex items-center space-x-2 text-sm font-medium">
