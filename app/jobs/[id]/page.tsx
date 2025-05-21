@@ -31,8 +31,8 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
   }, [])
 
   const handleIssueNewCard = () => {
-    // Use direct URL navigation
-    window.location.href = `/cards/new?jobId=${params.id}`
+    // Use direct URL navigation to the new route
+    window.location.href = `/create-card?jobId=${params.id}`
   }
 
   const handleSubmitReceipt = () => {
