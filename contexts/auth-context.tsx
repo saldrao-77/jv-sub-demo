@@ -9,8 +9,8 @@ type AuthContextType = {
   user: User | null
   session: Session | null
   isLoading: boolean
-  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any; data: any }>
+  signIn: (email: string, password: string) => Promise<{ error: any; data: any }>
   signOut: () => Promise<void>
 }
 
@@ -56,52 +56,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, businessName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      // Use signUp with email confirmation
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             business_name: businessName,
           },
+          // Make sure email confirmation is enabled
+          emailRedirectTo: `${window.location.origin}/login`,
         },
       })
 
-      // If signup is successful, also create a record in the users table
-      if (!error) {
-        // Get the user that was just created
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
+      // Log the response for debugging
+      console.log("Signup response:", { data, error })
 
-        if (user) {
-          // Insert into custom users table
-          await supabase.from("users").insert({
-            id: user.id,
-            email: email,
-            business_name: businessName,
-            password: "auth_managed", // We don't store the actual password, it's managed by Supabase Auth
-          })
-        }
-      }
-
-      return { error }
+      return { data, error }
     } catch (err) {
       console.error("Signup error:", err)
-      return { error: { message: "An unexpected error occurred during signup" } }
+      return {
+        data: null,
+        error: { message: "An unexpected error occurred during signup" },
+      }
     }
   }
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      return { error }
+      // Log the response for debugging
+      console.log("Sign in response:", { data, error })
+
+      if (!error && data.user) {
+        router.push("/dashboard")
+      }
+
+      return { data, error }
     } catch (err) {
       console.error("Sign in error:", err)
-      return { error: { message: "An unexpected error occurred during sign in" } }
+      return {
+        data: null,
+        error: { message: "An unexpected error occurred during sign in" },
+      }
     }
   }
 

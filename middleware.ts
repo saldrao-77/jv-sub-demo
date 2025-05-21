@@ -24,6 +24,7 @@ export async function middleware(req: NextRequest) {
   // If the route requires authentication and the user is not authenticated, redirect to login
   if (!isPublicRoute && !isAuthenticated) {
     const redirectUrl = new URL("/login", req.url)
+    redirectUrl.searchParams.set("redirect", req.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
 

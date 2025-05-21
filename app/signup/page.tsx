@@ -30,9 +30,10 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      const { error } = await signUp(email, password, businessName)
+      const { data, error } = await signUp(email, password, businessName)
 
       if (error) {
+        console.error("Signup error:", error)
         if (error.message.includes("already registered")) {
           setError("This email is already registered. Please sign in instead.")
         } else {
@@ -41,11 +42,19 @@ export default function SignupPage() {
         return
       }
 
+      console.log("Signup successful:", data)
+
+      // Check if email confirmation is needed
+      if (data?.user?.identities?.length === 0) {
+        setError("This email is already registered. Please sign in instead.")
+        return
+      }
+
       // Show success message
       setSuccess(true)
     } catch (err) {
+      console.error("Unexpected signup error:", err)
       setError("An unexpected error occurred")
-      console.error("Signup error:", err)
     } finally {
       setIsLoading(false)
     }

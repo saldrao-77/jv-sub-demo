@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -19,17 +19,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [resetSuccess, setResetSuccess] = useState(false)
   const router = useRouter()
   const { signIn } = useAuth()
-
-  useEffect(() => {
-    // Check if we have a reset=success query parameter
-    const searchParams = new URLSearchParams(window.location.search)
-    if (searchParams.get("reset") === "success") {
-      setResetSuccess(true)
-    }
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,27 +28,28 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await signIn(email, password)
+      const { data, error } = await signIn(email, password)
 
       if (error) {
+        console.error("Login error:", error)
+
         // Handle specific error cases
-        if (error.message.includes("Email not confirmed")) {
-          setError("Please confirm your email address before signing in. Check your inbox for a confirmation link.")
-        } else if (error.message.includes("Invalid login credentials")) {
+        if (error.message.includes("Invalid login credentials")) {
           setError("Invalid email or password. Please try again.")
-        } else if (error.message.includes("Email not found")) {
-          setError("No account found with this email. Please check your email or sign up.")
+        } else if (error.message.includes("Email not confirmed")) {
+          setError("Please confirm your email before signing in. Check your inbox for a confirmation link.")
         } else {
           setError(error.message)
         }
         return
       }
 
-      // Redirect to dashboard on successful login
-      router.push("/dashboard")
+      console.log("Login successful:", data)
+
+      // Redirect will be handled in the signIn function
     } catch (err) {
+      console.error("Unexpected login error:", err)
       setError("An unexpected error occurred")
-      console.error("Login error:", err)
     } finally {
       setIsLoading(false)
     }
@@ -71,8 +63,8 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md bg-[#1a1a1a] border-gray-800 text-white">
         <CardHeader>
-          <CardTitle className="text-2xl text-white">Login</CardTitle>
-          <CardDescription className="text-gray-400">Enter your credentials to access your account</CardDescription>
+          <CardTitle className="text-2xl text-white">Sign In</CardTitle>
+          <CardDescription className="text-gray-400">Sign in to your JobVault account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -80,14 +72,6 @@ export default function LoginPage() {
               <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {resetSuccess && (
-              <Alert className="bg-green-900 border-green-800 text-white">
-                <AlertDescription>
-                  Password has been reset successfully. You can now sign in with your new password.
-                </AlertDescription>
               </Alert>
             )}
 
@@ -106,14 +90,9 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-300">
-                  Password
-                </Label>
-                <Link href="/forgot-password" className="text-sm text-blue-400 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password" className="text-gray-300">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -122,6 +101,11 @@ export default function LoginPage() {
                 required
                 className="bg-[#2a2a2a] border-gray-700 text-white"
               />
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-xs text-blue-400 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
@@ -133,7 +117,7 @@ export default function LoginPage() {
           <div className="text-sm text-gray-400">
             Don't have an account?{" "}
             <Link href="/signup" className="text-blue-400 hover:underline">
-              Sign up
+              Create an account
             </Link>
           </div>
         </CardFooter>
