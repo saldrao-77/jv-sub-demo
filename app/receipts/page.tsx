@@ -1,25 +1,25 @@
 import { Suspense } from "react"
-import { TransactionsList } from "./transactions-list"
+import { ReceiptsList } from "./receipts-list"
 import { Header } from "@/components/header"
 import { getCurrentUser } from "@/lib/get-current-user"
 import { redirect } from "next/navigation"
-import { getTransactions } from "@/lib/api"
+import { getReceipts } from "@/lib/api"
 
-export default async function TransactionsPage() {
+export default async function ReceiptsPage() {
   const user = await getCurrentUser()
 
   if (!user) {
     redirect("/login")
   }
 
-  const transactions = await getTransactions(user.id)
+  const receipts = await getReceipts(user.id)
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 container py-6 md:py-10">
-        <Suspense fallback={<div className="text-center p-8">Loading transactions...</div>}>
-          <TransactionsList initialTransactions={transactions} userId={user.id} />
+        <Suspense fallback={<div className="text-center p-8">Loading receipts...</div>}>
+          <ReceiptsList initialReceipts={receipts} userId={user.id} />
         </Suspense>
       </main>
     </div>
