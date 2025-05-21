@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Header } from "@/components/header"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Sample data for transaction feed
 const transactionFeed = [
@@ -174,9 +175,80 @@ const transactionFeed = [
   },
 ]
 
+// Sample data for receipts
+const receiptData = [
+  {
+    id: "r1",
+    date: "May 19, 2025",
+    customer: "Sarah Johnson",
+    job: "Bathroom Renovation",
+    vendor: "Home Depot",
+    amount: 325.75,
+    description: "Bathroom fixtures and plumbing supplies",
+    imageUrl: "/store-receipt.png",
+    jobId: "1",
+  },
+  {
+    id: "r2",
+    date: "May 15, 2025",
+    customer: "Michael Chen",
+    job: "Kitchen Remodel",
+    vendor: "Lowe's",
+    amount: 750.0,
+    description: "Kitchen cabinets and countertops",
+    imageUrl: "/store-receipt.png",
+    jobId: "2",
+  },
+  {
+    id: "r3",
+    date: "May 3, 2025",
+    customer: "David Wilson",
+    job: "Patio Installation",
+    vendor: "Home Depot",
+    amount: 950.0,
+    description: "Patio materials and pavers",
+    imageUrl: "/store-receipt.png",
+    jobId: "5",
+  },
+  {
+    id: "r4",
+    date: "Apr 27, 2025",
+    customer: "Emily Rodriguez",
+    job: "Garage Conversion",
+    vendor: "Menards",
+    amount: 800.0,
+    description: "Insulation and drywall",
+    imageUrl: "/store-receipt.png",
+    jobId: "6",
+  },
+  {
+    id: "r5",
+    date: "Apr 25, 2025",
+    customer: "Emily Rodriguez",
+    job: "Garage Conversion",
+    vendor: "Home Depot",
+    amount: 1200.0,
+    description: "Electrical supplies and fixtures",
+    imageUrl: "/store-receipt.png",
+    jobId: "6",
+  },
+  {
+    id: "r6",
+    date: "Apr 18, 2025",
+    customer: "Thomas Brown",
+    job: "Fence Installation",
+    vendor: "Home Depot",
+    amount: 600.0,
+    description: "Fence posts and panels",
+    imageUrl: "/store-receipt.png",
+    jobId: "7",
+  },
+]
+
 export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [transactionType, setTransactionType] = useState("all")
+  const [activeTab, setActiveTab] = useState("all")
 
   // Calculate totals for the stats cards
   const totalDeposits = transactionFeed
@@ -202,6 +274,17 @@ export default function TransactionsPage() {
       (transactionType === "purchases" && transaction.type === "Purchase")
 
     return matchesSearch && matchesType
+  })
+
+  // Filter receipts based on search
+  const filteredReceipts = receiptData.filter((receipt) => {
+    const matchesSearch =
+      receipt.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      receipt.job.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      receipt.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      receipt.description.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return matchesSearch
   })
 
   const getTransactionTypeBadge = (type: string) => {
@@ -277,6 +360,38 @@ export default function TransactionsPage() {
     document.body.removeChild(link)
   }
 
+  // Function to export receipts as CSV
+  const exportReceiptsToCSV = () => {
+    // Create CSV header
+    const header = ["Date", "Customer", "Job", "Vendor", "Amount", "Description"].join(",")
+
+    // Create CSV rows
+    const rows = filteredReceipts.map((receipt) => {
+      return [
+        receipt.date,
+        `"${receipt.customer}"`, // Wrap in quotes to handle commas in names
+        `"${receipt.job}"`,
+        `"${receipt.vendor}"`,
+        receipt.amount.toFixed(2),
+        `"${receipt.description}"`,
+      ].join(",")
+    })
+
+    // Combine header and rows
+    const csv = [header, ...rows].join("\n")
+
+    // Create a blob and download link
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `receipts_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -286,7 +401,11 @@ export default function TransactionsPage() {
             <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
             <p className="text-muted-foreground">View and manage all your transactions</p>
           </div>
-          <Button onClick={exportToCSV} className="mt-4 md:mt-0" size="sm">
+          <Button
+            onClick={activeTab === "receipts" ? exportReceiptsToCSV : exportToCSV}
+            className="mt-4 md:mt-0"
+            size="sm"
+          >
             <FileDown className="mr-2 h-4 w-4" /> Export to CSV
           </Button>
         </div>
@@ -363,72 +482,145 @@ export default function TransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="all">
+            <Tabs
+              defaultValue="all"
+              onValueChange={(value) => {
+                setActiveTab(value)
+                if (value !== "receipts") {
+                  setTransactionType(value)
+                }
+              }}
+            >
               <TabsList className="mb-4">
-                <TabsTrigger value="all" onClick={() => setTransactionType("all")}>
-                  All
-                </TabsTrigger>
-                <TabsTrigger value="deposits" onClick={() => setTransactionType("deposits")}>
-                  Deposits
-                </TabsTrigger>
-                <TabsTrigger value="purchases" onClick={() => setTransactionType("purchases")}>
-                  Purchases
-                </TabsTrigger>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="deposits">Deposits</TabsTrigger>
+                <TabsTrigger value="purchases">Purchases</TabsTrigger>
+                <TabsTrigger value="receipts">Receipts</TabsTrigger>
               </TabsList>
-              <div className="space-y-4">
-                <div className="rounded-md border border-border">
-                  <div className="grid grid-cols-6 p-4 text-sm font-medium bg-secondary/30">
-                    <div className="col-span-6 md:col-span-1 px-2 flex items-center">
-                      Date
-                      <ArrowUpDown className="ml-1 h-3 w-3" />
-                    </div>
-                    <div className="col-span-6 md:col-span-2 px-2">Job</div>
-                    <div className="col-span-6 md:col-span-1 px-2">Type</div>
-                    <div className="col-span-6 md:col-span-1 px-2">Vendor</div>
-                    <div className="col-span-6 md:col-span-1 px-2 text-right">Amount</div>
-                  </div>
-                  <div className="divide-y divide-border">
-                    {filteredTransactions.length > 0 ? (
-                      filteredTransactions.map((transaction, idx) => (
-                        <div key={idx} className="grid grid-cols-1 md:grid-cols-6 p-4 text-sm items-center">
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Date:</div>
-                            {transaction.date}
-                          </div>
-                          <div className="py-2 md:py-0 px-2 md:col-span-2">
-                            <div className="font-medium md:hidden">Job:</div>
-                            <span className="font-medium">{transaction.job}</span>
-                            <div className="text-xs text-muted-foreground">{transaction.customer}</div>
-                          </div>
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Type:</div>
-                            {getTransactionTypeBadge(transaction.type)}
-                          </div>
-                          <div className="py-2 md:py-0 px-2">
-                            <div className="font-medium md:hidden">Vendor:</div>
-                            {transaction.vendor}
-                          </div>
-                          <div
-                            className={`py-2 md:py-0 px-2 md:text-right ${transaction.amount < 0 ? "text-red-400" : ""}`}
-                          >
-                            <div className="font-medium md:hidden">Amount:</div>
-                            {transaction.amount < 0 ? "-" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-8 text-center text-muted-foreground">
-                        No transactions found matching your search criteria.
+
+              {activeTab !== "receipts" ? (
+                <div className="space-y-4">
+                  <div className="rounded-md border border-border">
+                    <div className="grid grid-cols-6 p-4 text-sm font-medium bg-secondary/30">
+                      <div className="col-span-6 md:col-span-1 px-2 flex items-center">
+                        Date
+                        <ArrowUpDown className="ml-1 h-3 w-3" />
                       </div>
-                    )}
+                      <div className="col-span-6 md:col-span-2 px-2">Job</div>
+                      <div className="col-span-6 md:col-span-1 px-2">Type</div>
+                      <div className="col-span-6 md:col-span-1 px-2">Vendor</div>
+                      <div className="col-span-6 md:col-span-1 px-2 text-right">Amount</div>
+                    </div>
+                    <div className="divide-y divide-border">
+                      {filteredTransactions.length > 0 ? (
+                        filteredTransactions.map((transaction, idx) => (
+                          <div key={idx} className="grid grid-cols-1 md:grid-cols-6 p-4 text-sm items-center">
+                            <div className="py-2 md:py-0 px-2">
+                              <div className="font-medium md:hidden">Date:</div>
+                              {transaction.date}
+                            </div>
+                            <div className="py-2 md:py-0 px-2 md:col-span-2">
+                              <div className="font-medium md:hidden">Job:</div>
+                              <span className="font-medium">{transaction.job}</span>
+                              <div className="text-xs text-muted-foreground">{transaction.customer}</div>
+                            </div>
+                            <div className="py-2 md:py-0 px-2">
+                              <div className="font-medium md:hidden">Type:</div>
+                              {getTransactionTypeBadge(transaction.type)}
+                            </div>
+                            <div className="py-2 md:py-0 px-2">
+                              <div className="font-medium md:hidden">Vendor:</div>
+                              {transaction.vendor}
+                            </div>
+                            <div
+                              className={`py-2 md:py-0 px-2 md:text-right ${transaction.amount < 0 ? "text-red-400" : ""}`}
+                            >
+                              <div className="font-medium md:hidden">Amount:</div>
+                              {transaction.amount < 0 ? "-" : ""}${Math.abs(transaction.amount).toFixed(2)}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center text-muted-foreground">
+                          No transactions found matching your search criteria.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="rounded-md border border-border">
+                    <div className="grid grid-cols-7 p-4 text-sm font-medium bg-secondary/30">
+                      <div className="col-span-7 md:col-span-1 px-2 flex items-center">
+                        Date
+                        <ArrowUpDown className="ml-1 h-3 w-3" />
+                      </div>
+                      <div className="col-span-7 md:col-span-2 px-2">Job</div>
+                      <div className="col-span-7 md:col-span-1 px-2">Vendor</div>
+                      <div className="col-span-7 md:col-span-2 px-2">Description</div>
+                      <div className="col-span-7 md:col-span-1 px-2 text-right">Amount</div>
+                    </div>
+                    <div className="divide-y divide-border">
+                      {filteredReceipts.length > 0 ? (
+                        filteredReceipts.map((receipt) => (
+                          <div key={receipt.id} className="grid grid-cols-1 md:grid-cols-7 p-4 text-sm items-center">
+                            <div className="py-2 md:py-0 px-2">
+                              <div className="font-medium md:hidden">Date:</div>
+                              {receipt.date}
+                            </div>
+                            <div className="py-2 md:py-0 px-2 md:col-span-2">
+                              <div className="font-medium md:hidden">Job:</div>
+                              <span className="font-medium">{receipt.job}</span>
+                              <div className="text-xs text-muted-foreground">{receipt.customer}</div>
+                            </div>
+                            <div className="py-2 md:py-0 px-2">
+                              <div className="font-medium md:hidden">Vendor:</div>
+                              {receipt.vendor}
+                            </div>
+                            <div className="py-2 md:py-0 px-2 md:col-span-2">
+                              <div className="font-medium md:hidden">Description:</div>
+                              <div className="flex items-center">
+                                {receipt.description}
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
+                                        <Image className="h-4 w-4 text-muted-foreground" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="p-0 border-0">
+                                      <img
+                                        src={receipt.imageUrl || "/store-receipt.png"}
+                                        alt={`Receipt for ${receipt.description}`}
+                                        className="max-w-[300px] max-h-[400px] rounded-md"
+                                      />
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                            <div className="py-2 md:py-0 px-2 md:text-right">
+                              <div className="font-medium md:hidden">Amount:</div>${receipt.amount.toFixed(2)}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center text-muted-foreground">
+                          No receipts found matching your search criteria.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </Tabs>
           </CardContent>
           <CardFooter>
             <div className="text-xs text-muted-foreground">
-              Showing {filteredTransactions.length} of {transactionFeed.length} transactions
+              {activeTab === "receipts"
+                ? `Showing ${filteredReceipts.length} of ${receiptData.length} receipts`
+                : `Showing ${filteredTransactions.length} of ${transactionFeed.length} transactions`}
             </div>
           </CardFooter>
         </Card>
