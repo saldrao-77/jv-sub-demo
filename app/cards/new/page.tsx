@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, CreditCard, LinkIcon, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -53,9 +52,11 @@ const allVendors = [
 ]
 
 export default function NewCardPage() {
+  console.log("Rendering NewCardPage")
   const router = useRouter()
   const searchParams = useSearchParams()
-  const jobId = searchParams.get("jobId")
+  const jobId = searchParams ? searchParams.get("jobId") : null
+  console.log("jobId from searchParams:", jobId)
 
   const [selectedJob, setSelectedJob] = useState("")
   const [selectedVendors, setSelectedVendors] = useState<string[]>([])
@@ -64,12 +65,12 @@ export default function NewCardPage() {
   const [showCardDialog, setShowCardDialog] = useState(false)
   const [newCard, setNewCard] = useState<any>(null)
   const [copySuccess, setCopySuccess] = useState(false)
-  // Add issuedTo state
   const [issuedTo, setIssuedTo] = useState("")
   const [role, setRole] = useState("")
 
   // Pre-select job if jobId is provided
   useEffect(() => {
+    console.log("useEffect running with jobId:", jobId)
     if (jobId) {
       setSelectedJob(jobId)
       // Pre-select vendors from the job
@@ -109,7 +110,6 @@ export default function NewCardPage() {
       const amount = Number.parseFloat(cardAmount) || job.depositAmount
       const cardId = Math.random().toString(36).substring(2, 10)
       const cardNumber = "4242 4242 4242 " + Math.floor(1000 + Math.random() * 9000).toString()
-      const expiryDate = "06/25" // In a real app, this would be calculated
 
       setNewCard({
         id: cardId,
@@ -130,7 +130,6 @@ export default function NewCardPage() {
       })
 
       setShowCardDialog(true)
-      // Note: The router navigation happens when the dialog is closed in the DialogFooter
     }, 1500)
   }
 
@@ -205,13 +204,13 @@ JobVault Team`
       <Header />
       <main className="flex-1 container py-6 md:py-10">
         <div className="mb-6">
-          <Link
+          <a
             href="/cards"
             className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to Cards
-          </Link>
+          </a>
         </div>
 
         <Card>
@@ -355,7 +354,7 @@ JobVault Team`
                 type="button"
                 variant="outline"
                 className="w-full sm:w-auto text-base py-6 px-8"
-                onClick={() => router.push("/cards")}
+                onClick={() => (window.location.href = "/cards")}
               >
                 Cancel
               </Button>
@@ -493,7 +492,7 @@ JobVault Team`
                   className="w-full bg-blue hover:bg-blue-dark"
                   onClick={() => {
                     setShowCardDialog(false)
-                    router.push("/cards")
+                    window.location.href = "/cards"
                   }}
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
