@@ -2,67 +2,89 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useAuth } from "@/contexts/auth-context"
+import { useRouter, useSearchParams } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function LoginPage() {
+  // Password login states
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+
+  // Magic link states
+  const [magicLinkEmail, setMagicLinkEmail] = useState("")
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false)
+  const [magicLinkError, setMagicLinkError] = useState<string | null>(null)
+
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn } = useAuth()
+  const emailVerified = searchParams?.get("email_verified") === "true"
 
-  useEffect(() => {
-    // Check for query parameters
-    const emailVerified = searchParams.get("email_verified")
-    const resetSuccess = searchParams.get("reset") === "success"
-
-    if (emailVerified === "true") {
-      setSuccess("Email verified successfully! You can now sign in.")
-    } else if (resetSuccess) {
-      setSuccess("Password has been reset successfully. You can now sign in with your new password.")
-    }
-  }, [searchParams])
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-    setSuccess(null)
 
     try {
-      const { error } = await signIn(email, password)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
       if (error) {
         console.error("Login error:", error)
-
-        // Handle specific error cases
-        if (error.message.includes("Invalid login credentials")) {
-          setError("Invalid email or password. Please try again.")
-        } else if (error.message.includes("Email not confirmed")) {
-          setError("Please confirm your email before signing in. Check your inbox for a confirmation link.")
-        } else {
-          setError(error.message)
-        }
+        setError(error.message)
+        return
       }
-      // Successful login will redirect in the signIn function
+
+      if (data.user) {
+        router.push("/dashboard")
+      }
     } catch (err) {
       console.error("Unexpected login error:", err)
       setError("An unexpected error occurred")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleMagicLinkLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setMagicLinkLoading(true)
+    setMagicLinkError(null)
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        console.error("Magic link error:", error)
+        setMagicLinkError(error.message)
+        return
+      }
+
+      setMagicLinkSent(true)
+    } catch (err) {
+      console.error("Unexpected magic link error:", err)
+      setMagicLinkError("An unexpected error occurred")
+    } finally {
+      setMagicLinkLoading(false)
     }
   }
 
@@ -78,64 +100,119 @@ export default function LoginPage() {
           <CardDescription className="text-gray-400">Sign in to your JobVault account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+          {emailVerified && (
+            <Alert className="mb-4 bg-green-900 border-green-800 text-white">
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>Email verified successfully! You can now sign in.</AlertDescription>
+            </Alert>
+          )}
 
-            {success && (
-              <Alert className="bg-green-900 border-green-800 text-white">
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-[#2a2a2a] border-gray-700 text-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">
+          <Tabs defaultValue="password" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-[#2a2a2a]">
+              <TabsTrigger value="password" className="data-[state=active]:bg-blue-600">
                 Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-[#2a2a2a] border-gray-700 text-white"
-              />
-              <div className="text-right">
-                <Link href="/forgot-password" className="text-xs text-blue-400 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-            </div>
+              </TabsTrigger>
+              <TabsTrigger value="magic" className="data-[state=active]:bg-blue-600">
+                Magic Link
+              </TabsTrigger>
+            </TabsList>
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
+            <TabsContent value="password">
+              <form onSubmit={handlePasswordLogin} className="space-y-4 mt-4">
+                {error && (
+                  <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-300">
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-[#2a2a2a] border-gray-700 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="password" className="text-gray-300">
+                      Password
+                    </Label>
+                    <Link href="/forgot-password" className="text-sm text-blue-400 hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-[#2a2a2a] border-gray-700 text-white"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="magic">
+              <form onSubmit={handleMagicLinkLogin} className="space-y-4 mt-4">
+                {magicLinkSent ? (
+                  <Alert className="bg-green-900 border-green-800 text-white">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertDescription>Magic link sent! Check your email for a link to sign in.</AlertDescription>
+                  </Alert>
+                ) : (
+                  <>
+                    {magicLinkError && (
+                      <Alert variant="destructive" className="bg-red-900 border-red-800 text-white">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{magicLinkError}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="magic-email" className="text-gray-300">
+                        Email
+                      </Label>
+                      <Input
+                        id="magic-email"
+                        type="email"
+                        value={magicLinkEmail}
+                        onChange={(e) => setMagicLinkEmail(e.target.value)}
+                        required
+                        className="bg-[#2a2a2a] border-gray-700 text-white"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      disabled={magicLinkLoading}
+                    >
+                      {magicLinkLoading ? "Sending..." : "Send Magic Link"}
+                    </Button>
+                  </>
+                )}
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="flex justify-center">
           <div className="text-sm text-gray-400">
             Don't have an account?{" "}
             <Link href="/signup" className="text-blue-400 hover:underline">
-              Create an account
+              Sign up
             </Link>
           </div>
         </CardFooter>

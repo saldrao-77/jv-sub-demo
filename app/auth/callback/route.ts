@@ -16,5 +16,5 @@ export async function GET(request: NextRequest) {
   }
 
   // URL to redirect to after sign in
-  return NextResponse.redirect(`${requestUrl.origin}/login?email_verified=true`)
+  return NextResponse.redirect(`${requestUrl.origin}/dashboard`)
 }
