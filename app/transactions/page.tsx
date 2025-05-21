@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowUpDown, CheckCircle2, CreditCard, FileDown, Receipt, Search } from "lucide-react"
+import { ArrowUpDown, CheckCircle2, CreditCard, FileDown, Receipt, Search, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -185,7 +185,7 @@ const receiptData = [
     vendor: "Home Depot",
     amount: 325.75,
     description: "Bathroom fixtures and plumbing supplies",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "1",
   },
   {
@@ -196,7 +196,7 @@ const receiptData = [
     vendor: "Lowe's",
     amount: 750.0,
     description: "Kitchen cabinets and countertops",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "2",
   },
   {
@@ -207,7 +207,7 @@ const receiptData = [
     vendor: "Home Depot",
     amount: 950.0,
     description: "Patio materials and pavers",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "5",
   },
   {
@@ -218,7 +218,7 @@ const receiptData = [
     vendor: "Menards",
     amount: 800.0,
     description: "Insulation and drywall",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "6",
   },
   {
@@ -229,7 +229,7 @@ const receiptData = [
     vendor: "Home Depot",
     amount: 1200.0,
     description: "Electrical supplies and fixtures",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "6",
   },
   {
@@ -240,7 +240,7 @@ const receiptData = [
     vendor: "Home Depot",
     amount: 600.0,
     description: "Fence posts and panels",
-    imageUrl: "/store-receipt.png",
+    imageUrl: "/home-depot-receipt.png",
     jobId: "7",
   },
 ]
@@ -468,16 +468,18 @@ export default function TransactionsPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Select defaultValue="all" onValueChange={setTransactionType}>
-                  <SelectTrigger className="w-full sm:w-[150px]">
-                    <SelectValue placeholder="Filter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Transactions</SelectItem>
-                    <SelectItem value="deposits">Deposits</SelectItem>
-                    <SelectItem value="purchases">Purchases</SelectItem>
-                  </SelectContent>
-                </Select>
+                {activeTab !== "receipts" && (
+                  <Select defaultValue="all" onValueChange={setTransactionType}>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Transactions</SelectItem>
+                      <SelectItem value="deposits">Deposits</SelectItem>
+                      <SelectItem value="purchases">Purchases</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -586,12 +588,12 @@ export default function TransactionsPage() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
-                                        <Image className="h-4 w-4 text-muted-foreground" />
+                                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent side="right" className="p-0 border-0">
                                       <img
-                                        src={receipt.imageUrl || "/store-receipt.png"}
+                                        src={receipt.imageUrl || "/placeholder.svg"}
                                         alt={`Receipt for ${receipt.description}`}
                                         className="max-w-[300px] max-h-[400px] rounded-md"
                                       />
