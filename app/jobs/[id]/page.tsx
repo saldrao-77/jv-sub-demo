@@ -311,20 +311,18 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {" "}
-                {/* Increased spacing between buttons */}
-                <Link href={`/cards/new?jobId=${params.id}`} className="w-full block">
+                <a href={`/cards/new?jobId=${params.id}`} className="w-full block">
                   <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
                     <CreditCard className="mr-2 h-4 w-4" />
                     Issue New Card
                   </Button>
-                </Link>
-                <Link href={`/receipt?jobId=${params.id}`} className="w-full block">
+                </a>
+                <a href={`/receipt?jobId=${params.id}`} className="w-full block">
                   <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
                     <Receipt className="mr-2 h-4 w-4" />
                     Submit Receipt
                   </Button>
-                </Link>
+                </a>
               </CardContent>
             </Card>
           </div>
