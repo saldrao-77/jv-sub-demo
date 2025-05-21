@@ -2,20 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle2, CreditCard, Receipt, ShieldCheck } from "lucide-react"
+import { ArrowLeft, CheckCircle2, CreditCard, Receipt, ShieldCheck, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/header"
+import { Progress } from "@/components/ui/progress"
 
 export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const [isCardIssued, setIsCardIssued] = useState(false)
@@ -23,6 +14,21 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
   const handleIssueCard = () => {
     setIsCardIssued(true)
   }
+
+  // Add job progress state
+  const [jobProgress, setJobProgress] = useState(33)
+
+  // Sample cards data
+  const cards = [
+    {
+      id: "1", // Changed from card1 to 1
+      cardNumber: "•••• •••• •••• 4589",
+      vendor: "Home Depot",
+      amount: 850,
+      expiryDate: "06/25",
+      status: "active",
+    },
+  ]
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -47,33 +53,21 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Materials Deposit Details</CardTitle>
-                <CardDescription>Materials-only deposit for this job</CardDescription>
+                <CardTitle>Job Status & Timeline</CardTitle>
+                <CardDescription>Track the progress of your job</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">Amount</div>
-                    <div className="text-lg font-semibold">$850.00</div>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Overall Progress</span>
+                    <span className="font-medium">{jobProgress}%</span>
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">Vendor</div>
-                    <div className="text-lg font-semibold">Home Depot</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">Status</div>
-                    <div className="inline-flex items-center rounded-full bg-green-900/20 px-2.5 py-0.5 text-sm font-medium text-green-400">
-                      <CheckCircle2 className="mr-1 h-4 w-4" />
-                      Funds Received
-                    </div>
-                  </div>
+                  <Progress value={jobProgress} className="h-2" />
                 </div>
-
-                <Separator />
 
                 <div className="rounded-md bg-blue/10 p-4">
                   <div className="flex">
-                    <CheckCircle2 className="h-5 w-5 text-blue mr-2 flex-shrink-0" />
+                    <ShieldCheck className="h-5 w-5 text-blue mr-2 flex-shrink-0" />
                     <div>
                       <p className="font-medium">Materials funds received for Bathroom Renovation</p>
                       <p className="mt-1 text-sm text-muted-foreground">
@@ -82,51 +76,100 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button disabled={isCardIssued} className="bg-blue hover:bg-blue-dark">
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      {isCardIssued ? "Card Issued" : "Get Virtual Materials Card"}
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Issue Virtual Card</DialogTitle>
-                      <DialogDescription>This card can only be used at Home Depot for up to $850.00</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="rounded-md bg-blue/10 p-3 text-sm">
-                        <p className="font-medium">Materials-Only Card</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          This card is for purchasing materials only, in compliance with California law.
-                        </p>
-                      </div>
 
-                      <div className="grid gap-3">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Vendor:</span>
-                          <span className="font-medium">Home Depot</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Amount Limit:</span>
-                          <span className="font-medium">$850.00</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Expiration:</span>
-                          <span className="font-medium">30 days</span>
-                        </div>
+                <div className="flex">
+                  <div className="mr-4 flex flex-col items-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-900/20 text-green-400">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div className="h-full w-px bg-green-400/50"></div>
+                  </div>
+                  <div className="pb-8">
+                    <div className="text-lg font-medium">Payment Received</div>
+                    <div className="text-muted-foreground">May 18, 2025 • 10:24 AM</div>
+                    <div className="mt-2 text-sm">Customer paid the materials deposit</div>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="mr-4 flex flex-col items-center">
+                    {isCardIssued ? (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-900/20 text-green-400">
+                        <CheckCircle2 className="h-5 w-5" />
+                      </div>
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue/10 text-blue">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                    )}
+                    <div className="h-full w-px bg-border"></div>
+                  </div>
+                  <div className="pb-8">
+                    <div className="text-lg font-medium">Virtual Card Issued</div>
+                    <div className="text-muted-foreground">
+                      {isCardIssued ? "May 19, 2025 • 10:29 AM" : "In Progress"}
+                    </div>
+                    <div className="mt-2 text-sm">Virtual card issued for use at approved vendors</div>
+                  </div>
+                </div>
+
+                <div className="flex">
+                  <div className="mr-4 flex flex-col items-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                      <Receipt className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-medium">Materials Purchased</div>
+                    <div className="text-muted-foreground">Pending</div>
+                    <div className="mt-2 text-sm">Materials purchased using the virtual card</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Transaction History Card - Moved to left side */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Transaction History</CardTitle>
+                <CardDescription>All transactions related to this job</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start p-3 rounded-md bg-secondary/50">
+                    <div className="mr-4 flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-green-900/20 flex items-center justify-center">
+                        <CheckCircle2 className="h-5 w-5 text-green-400" />
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button onClick={handleIssueCard} className="bg-blue hover:bg-blue-dark">
-                        Issue Virtual Card
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardFooter>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div className="font-medium">Deposit</div>
+                        <div className="text-green-400">$850.00</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">May 18, 2025</div>
+                      <div className="text-sm mt-1">Vendor: -</div>
+                    </div>
+                  </div>
+
+                  {/* Added receipt transaction */}
+                  <div className="flex items-start p-3 rounded-md bg-secondary/50">
+                    <div className="mr-4 flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-purple-900/20 flex items-center justify-center">
+                        <Receipt className="h-5 w-5 text-purple-400" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <div className="font-medium">Receipt Submitted</div>
+                        <div className="text-purple-400">$0.00</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">May 19, 2025</div>
+                      <div className="text-sm mt-1">Vendor: Home Depot</div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
 
             {isCardIssued && (
@@ -193,61 +236,95 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                   <div className="text-sm font-medium text-muted-foreground">Phone</div>
                   <div>(555) 123-4567</div>
                 </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Property Address</div>
+                  <div>123 Oak St, San Francisco, CA</div>
+                </div>
               </CardContent>
             </Card>
 
+            {/* Materials Deposit Card - Moved to right side */}
             <Card>
               <CardHeader>
-                <CardTitle>Job Timeline</CardTitle>
+                <CardTitle>Materials Deposit Details</CardTitle>
+                <CardDescription>Materials-only deposit for this job</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex">
-                    <div className="mr-4 flex flex-col items-center">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-900/20 text-green-400">
-                        <CheckCircle2 className="h-4 w-4" />
-                      </div>
-                      <div className="h-full w-px bg-border"></div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Payment Received</div>
-                      <div className="text-sm text-muted-foreground">May 18, 2025 • 10:24 AM</div>
-                    </div>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">Amount</div>
+                    <div className="text-lg font-semibold">$850.00</div>
                   </div>
-
-                  <div className="flex">
-                    <div className="mr-4 flex flex-col items-center">
-                      {isCardIssued ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-900/20 text-green-400">
-                          <CheckCircle2 className="h-4 w-4" />
-                        </div>
-                      ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                          <CreditCard className="h-4 w-4" />
-                        </div>
-                      )}
-                      <div className="h-full w-px bg-border"></div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Virtual Card Issued</div>
-                      <div className="text-sm text-muted-foreground">
-                        {isCardIssued ? "May 19, 2025 • 10:29 AM" : "Pending"}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="mr-4 flex flex-col items-center">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-                        <Receipt className="h-4 w-4" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Materials Purchased</div>
-                      <div className="text-sm text-muted-foreground">Pending</div>
-                    </div>
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium text-muted-foreground">Vendor</div>
+                    <div className="text-lg font-semibold">Home Depot</div>
                   </div>
                 </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground">Status</div>
+                  <div className="inline-flex items-center rounded-full bg-green-900/20 px-2.5 py-0.5 text-sm font-medium text-green-400">
+                    <CheckCircle2 className="mr-1 h-4 w-4" />
+                    Funds Received
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cards Tile - New */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Cards</CardTitle>
+                <CardDescription>Virtual cards associated with this job</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {cards.length > 0 ? (
+                  <div className="space-y-3">
+                    {cards.map((card) => (
+                      <Link href={`/cards/${card.id}`} key={card.id}>
+                        <div className="rounded-md border p-3 hover:bg-secondary/50 cursor-pointer">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <CreditCard className="h-5 w-5 mr-2 text-blue" />
+                              <div>
+                                <div className="font-medium">{card.cardNumber}</div>
+                                <div className="text-sm text-muted-foreground">{card.vendor}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-medium">${card.amount.toFixed(2)}</div>
+                              <div className="text-xs text-muted-foreground">Exp: {card.expiryDate}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-4">No cards issued yet</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Actions Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {" "}
+                {/* Increased spacing between buttons */}
+                <Link href={`/cards/new?jobId=${params.id}`} className="w-full block">
+                  <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Issue New Card
+                  </Button>
+                </Link>
+                <Link href={`/receipt?jobId=${params.id}`} className="w-full block">
+                  <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
+                    <Receipt className="mr-2 h-4 w-4" />
+                    Submit Receipt
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>

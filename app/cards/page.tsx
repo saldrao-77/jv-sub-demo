@@ -227,7 +227,7 @@ export default function CardsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 md:grid-cols-3 mb-6">
+        <div className="grid gap-6 md:grid-cols-4 mb-6">
           <Card>
             <CardHeader>
               <CardTitle>Active Cards</CardTitle>
@@ -260,6 +260,17 @@ export default function CardsPage() {
               <p className="text-xs text-muted-foreground mt-1">
                 From {cardsData.filter((card) => card.initialAmount > card.remainingAmount).length} cards
               </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>SMS Number</CardTitle>
+              <CardDescription>For receipt submission</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">+18886395525</div>
+              <p className="text-xs text-muted-foreground mt-1">Text your receipts to this number</p>
             </CardContent>
           </Card>
         </div>

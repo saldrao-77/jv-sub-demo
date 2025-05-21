@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, CreditCard, Eye, EyeOff, LinkIcon, Phone, Receipt, ShieldCheck } from "lucide-react"
+import { ArrowLeft, CreditCard, Eye, EyeOff, LinkIcon, Receipt, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/header"
@@ -317,49 +317,32 @@ JobVault Team`
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* SMS Number Tile */}
-              <Card className="bg-black text-white">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-gray-400 mb-2">SMS Number</h3>
-                      <p className="text-2xl font-bold">+18886395525</p>
-                      <p className="text-sm text-gray-400 mt-1">Text your receipts to this number</p>
-                    </div>
-                    <Phone className="h-5 w-5 text-gray-400" />
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-muted-foreground text-sm mb-1">Total Spent</h3>
+                    <p className="text-2xl font-bold">
+                      ${(cardDetails.initialAmount - cardDetails.remainingAmount).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">of ${cardDetails.initialAmount.toFixed(2)}</p>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Total Spent Tile */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-muted-foreground text-sm mb-1">Total Spent</h3>
-                      <p className="text-2xl font-bold">
-                        ${(cardDetails.initialAmount - cardDetails.remainingAmount).toFixed(2)}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">of ${cardDetails.initialAmount.toFixed(2)}</p>
-                    </div>
-                    <div className="h-5 w-5 text-muted-foreground">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                      </svg>
-                    </div>
+                  <div className="h-5 w-5 text-muted-foreground">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -494,12 +477,15 @@ JobVault Team`
               </CardContent>
               {cardDetails.status === "active" && (
                 <CardFooter>
-                  <Button className="w-full bg-blue hover:bg-blue-dark" asChild>
-                    <Link href="/receipt">
+                  <Link href="/receipt" className="w-full">
+                    <button
+                      style={{ backgroundColor: "#0066FF", color: "white" }}
+                      className="w-full flex items-center justify-center rounded-md py-2 px-4 font-medium hover:bg-blue-dark"
+                    >
                       <Receipt className="mr-2 h-4 w-4" />
                       Submit Receipt
-                    </Link>
-                  </Button>
+                    </button>
+                  </Link>
                 </CardFooter>
               )}
             </Card>
@@ -617,12 +603,15 @@ JobVault Team`
                   <div>{cardDetails.customer}</div>
                 </div>
                 <Separator />
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href={`/jobs/${cardDetails.jobId}`}>
+                <Link href={`/jobs/${cardDetails.jobId}`} className="w-full">
+                  <button
+                    style={{ backgroundColor: "#0066FF", color: "white" }}
+                    className="w-full flex items-center justify-center rounded-md py-2 px-4 font-medium hover:bg-blue-dark"
+                  >
                     <CreditCard className="mr-2 h-4 w-4" />
                     View Job Details
-                  </Link>
-                </Button>
+                  </button>
+                </Link>
               </CardContent>
             </Card>
           </div>

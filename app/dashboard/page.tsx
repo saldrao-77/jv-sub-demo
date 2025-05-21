@@ -402,10 +402,10 @@ export default function Dashboard() {
                           </div>
                           <div className="py-2 md:py-0 px-2 md:col-span-1 flex items-center justify-center space-x-2">
                             <Link
-                              href={`/jobs/${job.id}/status`}
+                              href={`/jobs/${job.id}`}
                               className="text-blue hover:text-blue-dark"
                               onClick={(e) => e.stopPropagation()}
-                              title="View detailed status"
+                              title="View job details"
                             >
                               <ExternalLink className="h-4 w-4" />
                             </Link>

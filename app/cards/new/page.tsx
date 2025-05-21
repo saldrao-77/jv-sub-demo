@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, CreditCard, LinkIcon, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,6 +54,9 @@ const allVendors = [
 
 export default function NewCardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const jobId = searchParams.get("jobId")
+
   const [selectedJob, setSelectedJob] = useState("")
   const [selectedVendors, setSelectedVendors] = useState<string[]>([])
   const [cardAmount, setCardAmount] = useState("")
@@ -64,6 +67,19 @@ export default function NewCardPage() {
   // Add issuedTo state
   const [issuedTo, setIssuedTo] = useState("")
   const [role, setRole] = useState("")
+
+  // Pre-select job if jobId is provided
+  useEffect(() => {
+    if (jobId) {
+      setSelectedJob(jobId)
+      // Pre-select vendors from the job
+      const job = availableJobs.find((job) => job.id === jobId)
+      if (job) {
+        setSelectedVendors(job.vendors)
+        setCardAmount(job.depositAmount.toString())
+      }
+    }
+  }, [jobId])
 
   // Get job details based on selected job
   const jobDetails = availableJobs.find((job) => job.id === selectedJob)
@@ -357,7 +373,7 @@ JobVault Team`
         {/* Card Created Dialog */}
         {newCard && (
           <Dialog open={showCardDialog} onOpenChange={setShowCardDialog}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Virtual Card Created</DialogTitle>
                 <DialogDescription>Your virtual materials card has been issued successfully</DialogDescription>

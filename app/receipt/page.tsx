@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, CheckCircle2, ImageIcon, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,10 +10,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useSearchParams } from "next/navigation"
 
 export default function ReceiptPage() {
   const [isUploaded, setIsUploaded] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [selectedJob, setSelectedJob] = useState("bathroom")
+  const [receiptData, setReceiptData] = useState<any>(null)
+
+  const searchParams = useSearchParams()
+  const jobId = searchParams.get("jobId")
+
+  // Pre-select job if jobId is provided
+  useEffect(() => {
+    if (jobId) {
+      // In a real app, you would fetch the job details and pre-select it
+      console.log("Pre-selecting job with ID:", jobId)
+      setSelectedJob("bathroom") // Assuming jobId 1 is bathroom renovation
+    }
+  }, [jobId])
 
   const handleUpload = () => {
     setIsUploaded(true)
@@ -21,6 +36,24 @@ export default function ReceiptPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // In a real app, you would store the receipt in the database
+    // For now, we'll just simulate storing it
+    const formData = new FormData(e.target as HTMLFormElement)
+    const job = formData.get("job") as string
+    const notes = formData.get("notes") as string
+
+    const newReceiptData = {
+      job: job === "bathroom" ? "Bathroom Renovation" : "Kitchen Remodel",
+      notes: notes,
+      image: isUploaded ? "/store-receipt.png" : null,
+      amount: 0, // This would be extracted from the receipt or entered by the user
+      timestamp: new Date().toISOString(),
+      vendor: "Home Depot",
+    }
+
+    console.log("Receipt added:", newReceiptData)
+    setReceiptData(newReceiptData)
     setIsSubmitted(true)
   }
 
@@ -41,9 +74,10 @@ export default function ReceiptPage() {
               <div className="text-lg font-medium">✅ Receipt logged. Materials funds used as intended.</div>
             </div>
             <div className="space-y-1 text-sm">
-              <p>Job: Bathroom Renovation</p>
-              <p>Vendor: Home Depot</p>
-              <p>Amount: $850.00</p>
+              <p>Job: {receiptData?.job || "Bathroom Renovation"}</p>
+              <p>Vendor: {receiptData?.vendor || "Home Depot"}</p>
+              <p>Amount: ${receiptData?.amount || 0}.00</p>
+              {receiptData?.notes && <p>Notes: {receiptData.notes}</p>}
             </div>
           </CardContent>
           <CardFooter className="flex justify-center">
@@ -98,7 +132,7 @@ export default function ReceiptPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="job">Job</Label>
-                <Select defaultValue="bathroom">
+                <Select defaultValue={selectedJob} name="job">
                   <SelectTrigger id="job">
                     <SelectValue placeholder="Select job" />
                   </SelectTrigger>
@@ -113,6 +147,7 @@ export default function ReceiptPage() {
                 <Label htmlFor="notes">Additional Notes (Optional)</Label>
                 <Textarea
                   id="notes"
+                  name="notes"
                   placeholder="Add any additional information about this purchase"
                   className="min-h-[80px]"
                 />
