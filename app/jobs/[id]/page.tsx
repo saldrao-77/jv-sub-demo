@@ -311,18 +311,26 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <a href="/cards/new" style={{ display: "block", width: "100%" }}>
-                  <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Issue New Card
-                  </Button>
-                </a>
-                <a href={`/receipt?jobId=${params.id}`} style={{ display: "block", width: "100%" }}>
-                  <Button style={{ backgroundColor: "#0066FF", color: "white" }} className="w-full">
-                    <Receipt className="mr-2 h-4 w-4" />
-                    Submit Receipt
-                  </Button>
-                </a>
+                <Button
+                  style={{ backgroundColor: "#0066FF", color: "white" }}
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = `/cards/new?jobId=${params.id}`
+                  }}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Issue New Card
+                </Button>
+                <Button
+                  style={{ backgroundColor: "#0066FF", color: "white" }}
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = `/receipt?jobId=${params.id}`
+                  }}
+                >
+                  <Receipt className="mr-2 h-4 w-4" />
+                  Submit Receipt
+                </Button>
               </CardContent>
             </Card>
           </div>

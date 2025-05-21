@@ -168,6 +168,7 @@ const cardsData = [
 ]
 
 export default function CardDetailPage({ params }: { params: { id: string } }) {
+  console.log("Card ID from params:", params.id)
   const [cardDetails, setCardDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showFullCardNumber, setShowFullCardNumber] = useState(false)
