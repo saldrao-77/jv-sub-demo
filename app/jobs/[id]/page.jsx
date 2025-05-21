@@ -18,29 +18,33 @@ const jobData = {
   description: "Complete renovation of master bathroom including new shower, bathtub, vanity, toilet, and tile work.",
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
+export default function JobDetailPage({ params }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log("JobDetailPage - params.id:", params.id)
+
     // Simulate loading
     const timer = setTimeout(() => {
       setLoading(false)
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [params.id])
 
-  const handleIssueNewCard = () => {
-    // Use direct URL navigation to the new route
-    window.location.href = `/create-card?jobId=${params.id}`
+  function handleIssueNewCard() {
+    console.log("Navigating to /issue-card with jobId:", params.id)
+    // Use the most basic form of navigation
+    window.location.href = "/issue-card?jobId=" + params.id
   }
 
-  const handleSubmitReceipt = () => {
-    // Use direct URL navigation
-    window.location.href = `/receipt?jobId=${params.id}`
+  function handleSubmitReceipt() {
+    console.log("Navigating to /receipt with jobId:", params.id)
+    // Use the most basic form of navigation
+    window.location.href = "/receipt?jobId=" + params.id
   }
 
-  const goBack = () => {
+  function goBack() {
     window.location.href = "/jobs"
   }
 
@@ -131,15 +135,19 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full bg-blue hover:bg-blue-dark" onClick={handleIssueNewCard}>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Issue New Card
-                </Button>
+                <a href={`/issue-card?jobId=${params.id}`} style={{ display: "block", width: "100%" }}>
+                  <Button className="w-full bg-blue hover:bg-blue-dark">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Issue New Card
+                  </Button>
+                </a>
 
-                <Button className="w-full bg-blue hover:bg-blue-dark" onClick={handleSubmitReceipt}>
-                  <Receipt className="mr-2 h-4 w-4" />
-                  Submit Receipt
-                </Button>
+                <a href={`/receipt?jobId=${params.id}`} style={{ display: "block", width: "100%" }}>
+                  <Button className="w-full bg-blue hover:bg-blue-dark">
+                    <Receipt className="mr-2 h-4 w-4" />
+                    Submit Receipt
+                  </Button>
+                </a>
               </CardContent>
             </Card>
           </div>
